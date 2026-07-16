@@ -195,7 +195,7 @@ const forgotPassword = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     
-    const otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     
     user.otp = otp;
@@ -225,7 +225,7 @@ const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    // Validate Input
+    
     if (!email || !otp) {
       return res.status(400).json({
         success: false,
@@ -233,7 +233,7 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Check User
+    
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -243,7 +243,6 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Check OTP
     if (!user.otp || !user.otpExpiry) {
       return res.status(400).json({
         success: false,
@@ -251,7 +250,7 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Check Expiry
+  
     if (user.otpExpiry < Date.now()) {
       return res.status(400).json({
         success: false,
@@ -259,7 +258,7 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Match OTP
+ 
     if (user.otp !== otp) {
       return res.status(400).json({
         success: false,
@@ -286,7 +285,7 @@ const resetPassword = async (req, res) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
 
-    // Validate Input
+    
     if (!email || !newPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -294,7 +293,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Password Match
+  
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -302,7 +301,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Check User
+    
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -312,7 +311,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // OTP Must Be Verified
+   
     if (!user.otp || !user.otpExpiry) {
       return res.status(400).json({
         success: false,
@@ -320,15 +319,8 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Check OTP Expiry
-    if (user.otpExpiry < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP has expired.",
-      });
-    }
 
-    // Prevent Same Password
+   
     const isSamePassword = await bcrypt.compare(
       newPassword,
       user.password
@@ -341,12 +333,12 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash Password
+ 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
 
-    // Clear OTP
+   
     user.otp = null;
     user.otpExpiry = null;
 
