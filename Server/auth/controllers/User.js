@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import {sendOtpMail} from '../config/SendOtpMail.js'
 const register = async (req, res) => {
   try {
     const { username, password, email } = req.body;
@@ -16,7 +17,7 @@ const register = async (req, res) => {
       return res.status(400).json({
         message: "User already exists",
       });
-    }
+    } 
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -142,4 +143,229 @@ const Logout = async (req, res) => {
   }
 };
 
-export { register, login,Logout, };
+const profile = async (req, res) => {
+  try {
+    const user = req.user;
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+        isLoggedIn: user.isLoggedIn,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+  
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+   
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    
+    const otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
+
+    
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+
+    await user.save();
+
+
+    await sendOtpMail(user);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully to your email.",
+    });
+
+  } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    // Validate Input
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and OTP are required",
+      });
+    }
+
+    // Check User
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check OTP
+    if (!user.otp || !user.otpExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not generated. Please request a new OTP.",
+      });
+    }
+
+    // Check Expiry
+    if (user.otpExpiry < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired.",
+      });
+    }
+
+    // Match OTP
+    if (user.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully.",
+    });
+
+  } catch (error) {
+    console.error("VERIFY OTP ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    // Validate Input
+    if (!email || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required.",
+      });
+    }
+
+    // Password Match
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match.",
+      });
+    }
+
+    // Check User
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // OTP Must Be Verified
+    if (!user.otp || !user.otpExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: "Please verify OTP first.",
+      });
+    }
+
+    // Check OTP Expiry
+    if (user.otpExpiry < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired.",
+      });
+    }
+
+    // Prevent Same Password
+    const isSamePassword = await bcrypt.compare(
+      newPassword,
+      user.password
+    );
+
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password cannot be the same as the old password.",
+      });
+    }
+
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+
+    // Clear OTP
+    user.otp = null;
+    user.otpExpiry = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully.",
+    });
+
+  } catch (error) {
+    console.error("RESET PASSWORD ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+export { register, login,Logout,profile,forgotPassword,resetPassword,verifyOtp };
