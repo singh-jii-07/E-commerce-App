@@ -1,0 +1,13 @@
+import express from "express";
+import { register } from "../Controllers/User.js";
+
+
+const userRoute = express.Router();
+
+userRoute.post(
+  "/register",
+  register
+);
+
+export default userRoute;
+
