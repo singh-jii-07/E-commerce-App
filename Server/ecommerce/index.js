@@ -5,6 +5,7 @@ import connectDB from "./App/config/db.js";
 import router from "./App/routes/User.js";
 import addressRoute from "./App/routes/Address.js";
 import categoryRoutes from "./App/routes/Category.js";
+import productRoute from "./App/routes/Product.js";
 
 
 
@@ -20,7 +21,9 @@ connectDB();
 
 app.use("/api/adminuser", router);
 app.use("/api/address",addressRoute);
-app.use("/api/Category",categoryRoutes)
+app.use("/api/Category",categoryRoutes);
+app.use("/api/product",productRoute);
+
 
 app.get("/", (req, res) => {
   res.send("Welcome to Book Store API");
