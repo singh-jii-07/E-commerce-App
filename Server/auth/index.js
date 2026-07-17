@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./App/config/db.js";
+import userRoute from "./App/routes/User.js"
 
 
 dotenv.config();
@@ -13,7 +14,7 @@ app.use(express.json());
 
 connectDB();
 
-
+app.use("/api/user",userRoute)
 
 app.get("/", (req, res) => {
   res.send("Welcome to Book Store API");

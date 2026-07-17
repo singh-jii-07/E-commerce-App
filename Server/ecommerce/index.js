@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./App/config/db.js";
 import router from "./App/routes/User.js";
+import addressRoute from "./App/routes/Address.js";
+
 
 
 dotenv.config();
@@ -16,6 +18,8 @@ app.use(express.json());
 connectDB();
 
 app.use("/api/adminuser", router);
+
+app.use("/api/address",addressRoute)
 
 app.get("/", (req, res) => {
   res.send("Welcome to Book Store API");
