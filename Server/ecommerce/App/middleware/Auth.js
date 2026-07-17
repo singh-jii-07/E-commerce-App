@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 
 const auth = async (req, res, next) => {
   try {
@@ -11,23 +10,11 @@ const auth = async (req, res, next) => {
       });
     }
 
-    
     const token = authHeader.split(" ")[1];
-
-    
     const decode = jwt.verify(token, process.env.JWT_SECRET);
 
-
-    const user = await User.findById(decode.id);
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    
-    req.userId = user._id;
-    req.user = user;
+    req.userId = decode.id;
+    req.role = decode.role;
     next();
   } catch (error) {
     return res.status(401).json({

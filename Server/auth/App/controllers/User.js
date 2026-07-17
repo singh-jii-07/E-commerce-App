@@ -360,4 +360,48 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { register, login,Logout,profile,forgotPassword,resetPassword,verifyOtp };
+const adminGetAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, "-password -otp -otpExpiry -token");
+    return res.status(200).json({
+      success: true,
+      message: "Users fetched successfully",
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error("ADMIN GET ALL USERS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const adminGetUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id, "-password -otp -otpExpiry -token");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("ADMIN GET USER BY ID ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+export { register, login,Logout,profile,forgotPassword,resetPassword,verifyOtp, adminGetAllUsers, adminGetUserById };
