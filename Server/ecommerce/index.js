@@ -7,6 +7,7 @@ import addressRoute from "./App/routes/Address.js";
 import categoryRoutes from "./App/routes/Category.js";
 import productRoute from "./App/routes/Product.js";
 import cartRoute from "./App/routes/Cart.js";
+import reviewRoute from "./App/routes/Review.js";
 
 
 
@@ -25,7 +26,7 @@ app.use("/api/address",addressRoute);
 app.use("/api/Category",categoryRoutes);
 app.use("/api/product",productRoute);
 app.use("/api/cart",cartRoute)
-
+app.use("/api/review",reviewRoute)
 
 app.get("/", (req, res) => {
   res.send("Welcome to Book Store API");
