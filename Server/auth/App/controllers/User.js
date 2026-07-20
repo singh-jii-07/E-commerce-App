@@ -221,10 +221,10 @@ const forgotPassword = async (req, res) => {
     });
   }
 };
+
 const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log("verifyOtp body received:", req.body);
 
     
     if (!email || !otp) {
@@ -298,7 +298,7 @@ const verifyOtp = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
-    console.log("resetPassword body received:", req.body);
+
 
     
     if (!email || !newPassword || !confirmPassword) {
