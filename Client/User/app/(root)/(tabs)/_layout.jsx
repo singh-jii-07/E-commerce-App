@@ -1,22 +1,26 @@
 import { Tabs } from "expo-router";
-import Entypo from "@expo/vector-icons/Entypo";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-
-        tabBarActiveTintColor: "black",
-        tabBarInactiveTintColor: "#999",
-
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "#94A3B8",
         tabBarStyle: {
-          backgroundColor: "#fff",
-          height: 60,
-          paddingBottom: 5,
+          backgroundColor: "#0F172A",
+          height: 70,
+          paddingBottom: 10,
+          paddingTop: 10,
+          borderTopWidth: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
+          marginTop: 4,
         },
       }}
     >
@@ -25,64 +29,44 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-
           tabBarIcon: ({ color, size }) => (
-            <Entypo
-              name="home"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="home" size={24} color={color} />
           ),
         }}
       />
 
-     
+      {/* Order */}
       <Tabs.Screen
         name="order"
         options={{
           title: "Order",
-
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome
-              name="search"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="storefront-outline" size={26} color={color} />
           ),
         }}
       />
 
-      
+      {/* My Cart */}
       <Tabs.Screen
         name="myCard"
         options={{
-          title: "My Card",
-
+          title: "My Cart",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="bookmark"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="basket-outline" size={28} color={color} />
           ),
         }}
       />
 
-   
+      {/* More */}
       <Tabs.Screen
         name="More"
         options={{
           title: "More",
-
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons
-              name="person"
-              size={size}
-              color={color}
-            />
+            <Feather name="grid" size={24} color={color} />
           ),
         }}
       />
     </Tabs>
   );
-}
+}
