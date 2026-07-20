@@ -224,9 +224,11 @@ const forgotPassword = async (req, res) => {
 const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    console.log("verifyOtp body received:", req.body);
 
     
     if (!email || !otp) {
+      console.log("verifyOtp failed: missing email or otp in request body");
       return res.status(400).json({
         success: false,
         message: "Email and OTP are required",
@@ -237,13 +239,21 @@ const verifyOtp = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
+      console.log("verifyOtp failed: user not found in DB for email:", email);
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
+    console.log("User DB state during verifyOtp check:", {
+      email: user.email,
+      otp: user.otp,
+      otpExpiry: user.otpExpiry,
+    });
+
     if (!user.otp || !user.otpExpiry) {
+      console.log("verifyOtp failed: user has no OTP/Expiry in DB (needs to generate OTP first)");
       return res.status(400).json({
         success: false,
         message: "OTP not generated. Please request a new OTP.",
@@ -252,6 +262,7 @@ const verifyOtp = async (req, res) => {
 
   
     if (user.otpExpiry < Date.now()) {
+      console.log("verifyOtp failed: OTP has expired in DB");
       return res.status(400).json({
         success: false,
         message: "OTP has expired.",
@@ -260,11 +271,14 @@ const verifyOtp = async (req, res) => {
 
  
     if (user.otp !== otp) {
+      console.log("verifyOtp failed: OTP mismatch. DB:", user.otp, "Request:", otp);
       return res.status(400).json({
         success: false,
         message: "Invalid OTP.",
       });
     }
+
+    console.log("verifyOtp succeeded for user:", email);
 
     return res.status(200).json({
       success: true,
@@ -284,9 +298,11 @@ const verifyOtp = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
+    console.log("resetPassword body received:", req.body);
 
     
     if (!email || !newPassword || !confirmPassword) {
+      console.log("Validation failed: missing fields", { email: !!email, newPassword: !!newPassword, confirmPassword: !!confirmPassword });
       return res.status(400).json({
         success: false,
         message: "All fields are required.",
@@ -295,6 +311,7 @@ const resetPassword = async (req, res) => {
 
   
     if (newPassword !== confirmPassword) {
+      console.log("Validation failed: passwords do not match");
       return res.status(400).json({
         success: false,
         message: "Passwords do not match.",
@@ -305,14 +322,22 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
+      console.log("Validation failed: user not found in DB with email:", email);
       return res.status(404).json({
         success: false,
         message: "User not found.",
       });
     }
 
+    console.log("User DB state before checking OTP:", {
+      email: user.email,
+      otp: user.otp,
+      otpExpiry: user.otpExpiry,
+    });
+
    
     if (!user.otp || !user.otpExpiry) {
+      console.log("Validation failed: user.otp or user.otpExpiry is missing in DB");
       return res.status(400).json({
         success: false,
         message: "Please verify OTP first.",
@@ -321,12 +346,14 @@ const resetPassword = async (req, res) => {
 
 
    
+    console.log("Checking if new password matches old password...");
     const isSamePassword = await bcrypt.compare(
       newPassword,
       user.password
     );
 
     if (isSamePassword) {
+      console.log("Validation failed: new password is the same as the old password");
       return res.status(400).json({
         success: false,
         message: "New password cannot be the same as the old password.",
