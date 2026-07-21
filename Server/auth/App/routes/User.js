@@ -11,7 +11,7 @@ userRoute.post("/logout",auth,Logout)
 userRoute.get("/profile",auth,profile)
 userRoute.post('/forgot',forgotPassword)
 userRoute.post('/otp',verifyOtp)
-userRoute.post('/chnagepassword',resetPassword)
+userRoute.post('/changepassword',resetPassword)
 
 
 userRoute.get("/all", auth, admin, adminGetAllUsers);

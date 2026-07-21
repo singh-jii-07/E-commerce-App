@@ -32,7 +32,8 @@ export default function ResetPassword() {
       if (storedEmail) {
         setEmail(storedEmail);
       } else if (paramEmail) {
-        setEmail(paramEmail);
+        const extracted = Array.isArray(paramEmail) ? paramEmail[0] : paramEmail;
+        setEmail(extracted ? extracted.trim().toLowerCase() : "");
       }
     };
     getEmail();
@@ -63,7 +64,7 @@ export default function ResetPassword() {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:5000/api/user/chnagepassword",
+        "http://localhost:5000/api/user/changepassword",
         {
           email,
           newPassword: newPassword.trim(),
