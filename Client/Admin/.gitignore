@@ -1,0 +1,21 @@
+# Backend uploads
+uploads/
+public/uploads/
+
+# MongoDB dump
+dump/
+
+# Certificates & Keys
+*.pem
+*.key
+*.crt
+
+# Docker
+docker-compose.override.yml
+
+# VS Code Settings
+.history/
+
+# Mac
+.AppleDouble
+.LSOverride
