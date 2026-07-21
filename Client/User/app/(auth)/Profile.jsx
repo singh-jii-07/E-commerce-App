@@ -58,6 +58,12 @@ const Profile = () => {
       icon: <Ionicons name="location-outline" size={20} color="#0F172A" />,
       route: "/address",
     },
+    {
+      id: 3,
+      title: "My Orders",
+      icon: <Feather name="shopping-bag" size={20} color="#0F172A" />,
+      route: "/orders",
+    },
   ];
 
   return (

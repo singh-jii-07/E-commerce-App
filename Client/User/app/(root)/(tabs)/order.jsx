@@ -1,14 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React from "react";
+import OrdersList from "../../orders/index";
 
-const order = () => {
-  return (
-    <View>
-      <Text>order</Text>
-    </View>
-  )
+export default function OrderTab() {
+  return <OrdersList />;
 }
-
-export default order
-
-const styles = StyleSheet.create({})
