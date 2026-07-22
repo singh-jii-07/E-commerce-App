@@ -11,6 +11,8 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Modal,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -51,32 +53,30 @@ const MyCart = () => {
 
   const calculateTotal = () => {
     return cartItems.reduce((acc, item) => {
-      const p = item.product;
-      const price = p?.price || 0;
+      const price = item.product?.price || 0;
       return acc + price * item.quantity;
     }, 0);
   };
 
-  const handleUpdateQuantity = async (cartItem, delta) => {
-    const newQty = cartItem.quantity + delta;
-    if (newQty <= 0) {
-      handleDeleteItem(cartItem._id);
-      return;
-    }
+  const handleUpdateQuantity = async (cartItem, change) => {
+    const newQty = cartItem.quantity + change;
+    if (newQty <= 0) return;
 
     try {
       setUpdatingId(cartItem._id);
-      // Calls addToCart with delta quantity to update cart on server
-      const productId = cartItem.product?._id || cartItem.product;
-      const res = await cartService.addToCart(productId, delta);
+      const res = await cartService.updateCartItem(cartItem._id, newQty);
       if (res && res.success) {
-        await fetchCart();
+        setCartItems((prev) =>
+          prev.map((item) =>
+            item._id === cartItem._id ? { ...item, quantity: newQty } : item
+          )
+        );
       } else {
         Alert.alert("Notice", res?.message || "Could not update quantity.");
       }
     } catch (err) {
       console.log("Update quantity error:", err);
-      Alert.alert("Error", err?.response?.data?.message || "Failed to update item.");
+      Alert.alert("Error", err?.response?.data?.message || "Could not update item.");
     } finally {
       setUpdatingId(null);
     }
@@ -107,9 +107,12 @@ const MyCart = () => {
 
     try {
       setCheckoutLoading(true);
-      // Fetch user default address
+
+      // 1. Fetch user default address
       const addrRes = await addressService.getAddresses();
-      if (!addrRes || !addrRes.success || !Array.isArray(addrRes.addresses) || addrRes.addresses.length === 0) {
+      const addressList = addrRes?.addresses || addrRes?.data || [];
+
+      if (!addrRes || !addrRes.success || !Array.isArray(addressList) || addressList.length === 0) {
         Alert.alert(
           "Address Required",
           "Please add a delivery address before placing an order.",
@@ -121,32 +124,34 @@ const MyCart = () => {
         return;
       }
 
-      const defaultAddr = addrRes.addresses.find((a) => a.isDefault) || addrRes.addresses[0];
+      const defaultAddr = addressList.find((a) => a.isDefault) || addressList[0];
 
-      // Create Order using existing Order API
+      if (!defaultAddr || !defaultAddr._id) {
+        Alert.alert("Address Error", "Selected address is invalid. Please add a valid address.");
+        return;
+      }
+
+      // 2. Create Order in backend
       const orderRes = await orderService.createOrder({
         address: defaultAddr._id,
         paymentMethod: "Cash on Delivery",
       });
 
-      if (orderRes && orderRes.success) {
-        Alert.alert(
-          "Order Placed!",
-          "Your order has been placed successfully.",
-          [
-            {
-              text: "View Orders",
-              onPress: () => router.push("/orders"),
-            },
-          ]
-        );
+      if (orderRes && orderRes.success && orderRes.order) {
         fetchCart();
+        Alert.alert("Order Placed!", "Your order has been placed successfully.", [
+          {
+            text: "View Order Details",
+            onPress: () => router.push(`/orders/${orderRes.order._id}`),
+          },
+        ]);
       } else {
         Alert.alert("Checkout Failed", orderRes?.message || "Failed to place order.");
       }
     } catch (err) {
       console.log("Checkout error:", err);
-      Alert.alert("Checkout Error", err?.response?.data?.message || "Could not complete checkout.");
+      const errMsg = err?.response?.data?.message || err.message || "Could not complete checkout.";
+      Alert.alert("Checkout Error", errMsg);
     } finally {
       setCheckoutLoading(false);
     }
@@ -494,5 +499,119 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: 36,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  closeBtnCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+    marginBottom: 16,
+  },
+  paymentOptionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    marginBottom: 12,
+  },
+  paymentOptionSelected: {
+    borderColor: "#0F172A",
+    backgroundColor: "#F1F5F9",
+  },
+  paymentOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  paymentIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paymentOptionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  paymentOptionSub: {
+    fontSize: 12,
+    color: "#64748B",
+    marginTop: 2,
+  },
+  confirmPayBtn: {
+    backgroundColor: "#0F172A",
+    borderRadius: 30,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  confirmPayBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 6,
+  },
+  cardInput: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#0F172A",
+    marginBottom: 14,
+  },
+  cardInputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 14,
+    marginBottom: 14,
   },
 });

@@ -12,7 +12,7 @@ import {
   StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import orderService from "../../services/orderService";
 
 const statusFilters = ["All Order", "Pending", "Processing", "Delivered", "Cancelled"];
@@ -22,10 +22,6 @@ const OrdersList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("All Order");
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -43,6 +39,12 @@ const OrdersList = () => {
       setLoading(false);
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchOrders();
+    }, [])
+  );
 
   const filteredOrders = useMemo(() => {
     if (selectedFilter === "All Order") return orders;

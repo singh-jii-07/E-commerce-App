@@ -62,7 +62,7 @@ const Profile = () => {
       id: 3,
       title: "My Orders",
       icon: <Feather name="shopping-bag" size={20} color="#0F172A" />,
-      route: "/orders",
+      route: "/(root)/(tabs)/order",
     },
   ];
 
