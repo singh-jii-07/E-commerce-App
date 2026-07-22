@@ -9,8 +9,6 @@ import productRoute from "./App/routes/Product.js";
 import cartRoute from "./App/routes/Cart.js";
 import reviewRoute from "./App/routes/Review.js";
 import orderRoute from "./App/routes/Order.js";
-import paymentRoute from "./App/routes/paymentRoutes.js";
-
 
 const app = express();
 
@@ -20,16 +18,16 @@ app.use(express.json());
 connectDB();
 
 app.use("/api/adminuser", router);
-app.use("/api/address",addressRoute);
-app.use("/api/Category",categoryRoutes);
-app.use("/api/product",productRoute);
-app.use("/api/cart",cartRoute);
-app.use("/api/review",reviewRoute);
-app.use("/api/order",orderRoute);
-app.use("/api/payment",paymentRoute);
+app.use("/api/address", addressRoute);
+app.use("/api/Category", categoryRoutes);
+app.use("/api/product", productRoute);
+app.use("/api/cart", cartRoute);
+app.use("/api/review", reviewRoute);
+app.use("/api/order", orderRoute);
+app.use("/api/payment", orderRoute);
 
 app.get("/", (req, res) => {
-  res.send("Welcome to Book Store API");
+  res.send("Welcome to E-commerce API");
 });
 
 const PORT = process.env.PORT || 5001;
