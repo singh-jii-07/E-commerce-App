@@ -9,7 +9,7 @@ import productRoute from "./App/routes/Product.js";
 import cartRoute from "./App/routes/Cart.js";
 import reviewRoute from "./App/routes/Review.js";
 import orderRoute from "./App/routes/Order.js";
-// import paymentRoute from "./App/routes/paymentRoutes.js";
+import paymentRoute from "./App/routes/paymentRoutes.js";
 
 
 
@@ -30,7 +30,7 @@ app.use("/api/product",productRoute);
 app.use("/api/cart",cartRoute);
 app.use("/api/review",reviewRoute);
 app.use("/api/order",orderRoute);
-// app.use("/api/payment",paymentRoute);
+app.use("/api/payment",paymentRoute);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Book Store API");
