@@ -11,12 +11,13 @@ const getAuthHeaders = async () => {
 };
 
 export const paymentService = {
-  // Create Razorpay Order
-  createRazorpayOrder: async (orderId) => {
+  // Create Razorpay Order (accepts orderId string or payload object with address/orderId)
+  createRazorpayOrder: async (data) => {
     const headers = await getAuthHeaders();
+    const payload = typeof data === 'string' ? { orderId: data } : data;
     const response = await axios.post(
-      `${API_CONFIG.ECOMMERCE_BASE_URL}/payment/create`,
-      { orderId },
+      `${API_CONFIG.ECOMMERCE_BASE_URL}/payment/create-razorpay`,
+      payload,
       { headers }
     );
     return response.data;

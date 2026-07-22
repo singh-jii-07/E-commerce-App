@@ -99,62 +99,12 @@ const MyCart = () => {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (cartItems.length === 0) {
       Alert.alert("Empty Cart", "Your cart is empty. Add products before checking out.");
       return;
     }
-
-    try {
-      setCheckoutLoading(true);
-
-      // 1. Fetch user default address
-      const addrRes = await addressService.getAddresses();
-      const addressList = addrRes?.addresses || addrRes?.data || [];
-
-      if (!addrRes || !addrRes.success || !Array.isArray(addressList) || addressList.length === 0) {
-        Alert.alert(
-          "Address Required",
-          "Please add a delivery address before placing an order.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Add Address", onPress: () => router.push("/add-address") },
-          ]
-        );
-        return;
-      }
-
-      const defaultAddr = addressList.find((a) => a.isDefault) || addressList[0];
-
-      if (!defaultAddr || !defaultAddr._id) {
-        Alert.alert("Address Error", "Selected address is invalid. Please add a valid address.");
-        return;
-      }
-
-      // 2. Create Order in backend
-      const orderRes = await orderService.createOrder({
-        address: defaultAddr._id,
-        paymentMethod: "Cash on Delivery",
-      });
-
-      if (orderRes && orderRes.success && orderRes.order) {
-        fetchCart();
-        Alert.alert("Order Placed!", "Your order has been placed successfully.", [
-          {
-            text: "View Order Details",
-            onPress: () => router.push(`/orders/${orderRes.order._id}`),
-          },
-        ]);
-      } else {
-        Alert.alert("Checkout Failed", orderRes?.message || "Failed to place order.");
-      }
-    } catch (err) {
-      console.log("Checkout error:", err);
-      const errMsg = err?.response?.data?.message || err.message || "Could not complete checkout.";
-      Alert.alert("Checkout Error", errMsg);
-    } finally {
-      setCheckoutLoading(false);
-    }
+    router.push("/checkout");
   };
 
   const renderCartItem = ({ item }) => {
