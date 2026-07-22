@@ -17,7 +17,6 @@ const orderRoute = express.Router();
 // Order creation & payment routes
 orderRoute.post("/create", auth, createOrder);
 orderRoute.post("/create-razorpay", auth, createOrderRazorpay);
-orderRoute.post("/verify-razorpay", auth, verifyRazorpay);
 orderRoute.post("/verify", auth, verifyRazorpay);
 
 // Order fetching & management routes

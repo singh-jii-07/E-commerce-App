@@ -2,7 +2,9 @@ import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Address from "../models/Address.js";
 import Product from "../models/Product.js";
+import User from "../models/User.js";
 import Razorpay from "razorpay";
+import mongoose from "mongoose"
 
 let razorpayInstance = null;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
@@ -274,21 +276,36 @@ const createOrderRazorpay = async (req, res) => {
 const verifyRazorpay = async (req, res) => {
   try {
     const userId = req.userId;
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    if (!razorpay_order_id) {
+    if (!orderId && !razorpay_order_id) {
       return res.status(400).json({
         success: false,
-        message: "Razorpay order ID is required.",
+        message: "Order ID or Razorpay order ID is required.",
       });
     }
 
-    const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    let order = null;
+
+    // 1. Try finding by MongoDB _id (orderId)
+    if (orderId && mongoose.Types.ObjectId.isValid(orderId)) {
+      order = await Order.findById(orderId);
+    }
+
+    // 2. Try finding by razorpayOrderId field
+    if (!order && razorpay_order_id) {
+      order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    }
+
+    // 3. Fallback: try finding by razorpay_order_id as MongoDB _id
+    if (!order && razorpay_order_id && mongoose.Types.ObjectId.isValid(razorpay_order_id)) {
+      order = await Order.findById(razorpay_order_id);
+    }
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order not found for given Razorpay order ID.",
+        message: "Order not found for given details.",
       });
     }
 
@@ -459,7 +476,7 @@ const cancelOrder = async (req, res) => {
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("user", "name email phone")
+      .populate("user")
       .populate("items.product", "name price images")
       .populate("address")
       .sort({ createdAt: -1 });
