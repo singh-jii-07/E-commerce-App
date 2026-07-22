@@ -1,6 +1,6 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import connectDB from "./App/config/db.js";
 import router from "./App/routes/User.js";
 import addressRoute from "./App/routes/Address.js";
@@ -10,10 +10,6 @@ import cartRoute from "./App/routes/Cart.js";
 import reviewRoute from "./App/routes/Review.js";
 import orderRoute from "./App/routes/Order.js";
 import paymentRoute from "./App/routes/paymentRoutes.js";
-
-
-
-dotenv.config();
 
 
 const app = express();

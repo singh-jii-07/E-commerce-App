@@ -1,14 +1,13 @@
 import crypto from "crypto";
-import order from "../models/Order.js"
-import product from "../models/Product.js"
-import user from "../models/User.js"
+import Order from "../models/Order.js";
+import Product from "../models/Product.js";
+import Cart from "../models/Cart.js";
 import razorpay from "../utils/razorpay.js";
 
- const createRazorpayOrder = async (req, res) => {
+const createRazorpayOrder = async (req, res) => {
   try {
     const { orderId } = req.body;   
 
-    
     const order = await Order.findById(orderId);
 
     if (!order) {
@@ -18,7 +17,6 @@ import razorpay from "../utils/razorpay.js";
       });
     }
 
-   
     if (order.paymentStatus === "Paid") {
       return res.status(400).json({
         success: false,
@@ -26,11 +24,11 @@ import razorpay from "../utils/razorpay.js";
       });
     }
 
-   const options = {
-  amount: order.totalAmount * 100, 
-  currency: "INR",
-  receipt: order._id.toString(),
-};
+    const options = {
+      amount: Math.round(order.totalAmount * 100),
+      currency: "INR",
+      receipt: order._id.toString(),
+    };
 
     const razorpayOrder = await razorpay.orders.create(options);
 
@@ -78,7 +76,7 @@ const verifyPayment = async (req, res) => {
 
     // Find Order
     const order = await Order.findById(orderId);
-cd 
+
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -95,15 +93,34 @@ cd
     }
 
     // Verify Razorpay Signature
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+      console.error("RAZORPAY_KEY_SECRET is not set in environment variables!");
+    }
+
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .createHmac("sha256", keySecret || "")
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
+
+    console.log("---- Razorpay Verification Debug ----");
+    console.log("razorpay_order_id:", razorpay_order_id);
+    console.log("razorpay_payment_id:", razorpay_payment_id);
+    console.log("Received signature:", razorpay_signature);
+    console.log("Generated signature:", generatedSignature);
+    console.log("Signature match:", generatedSignature === razorpay_signature);
+    console.log("-------------------------------------");
 
     if (generatedSignature !== razorpay_signature) {
       return res.status(400).json({
         success: false,
         message: "Payment verification failed.",
+        debug: {
+          razorpay_order_id,
+          razorpay_payment_id,
+          receivedSignature: razorpay_signature,
+          generatedSignature: generatedSignature,
+        }
       });
     }
 
@@ -117,23 +134,22 @@ cd
 
     await order.save();
 
-    // Reduce Product Stock
-    for (const item of order.items) {
-      const product = await Product.findById(item.product);
+    // Reduce Product Stock safely
+    if (Array.isArray(order.items)) {
+      for (const item of order.items) {
+        const productId = item.product?._id || item.product;
+        const product = await Product.findById(productId);
 
-      if (!product) continue;
+        if (!product) continue;
 
-      product.stock -= item.quantity;
-
-      await product.save();
+        product.stock = Math.max(0, (product.stock || 0) - item.quantity);
+        await product.save();
+      }
     }
 
-    // Clear User Cart
-    const user = await User.findById(order.user);
-
-    if (user) {
-      user.cart = [];
-      await user.save();
+    // Clear User Cart in Cart collection
+    if (order.user) {
+      await Cart.deleteMany({ user: order.user });
     }
 
     return res.status(200).json({
@@ -153,5 +169,4 @@ cd
   }
 };
 
-
-export {createRazorpayOrder,verifyPayment}
+export { createRazorpayOrder, verifyPayment };
