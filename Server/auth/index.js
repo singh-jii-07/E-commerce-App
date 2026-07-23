@@ -17,7 +17,7 @@ connectDB();
 app.use("/api/user",userRoute)
 
 app.get("/", (req, res) => {
-  res.send("Welcome to Book Store API");
+  res.send("Welcome to Ecommerce Store API");
 });
 
 const PORT = process.env.PORT || 5000;
