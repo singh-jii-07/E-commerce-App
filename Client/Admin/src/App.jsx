@@ -9,6 +9,8 @@ import ProductsPage from "./pages/ProductsPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import OrdersPage from "./pages/OrdersPage";
 import UsersPage from "./pages/UsersPage";
+import FaqsPage from "./pages/FaqsPage";
+import ContactsPage from "./pages/ContactsPage";
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="users" element={<UsersPage />} />
+            <Route path="faqs" element={<FaqsPage />} />
+            <Route path="contacts" element={<ContactsPage />} />
           </Route>
 
           {/* Catch-all Redirect */}

@@ -57,6 +57,18 @@ const Profile = () => {
       icon: <Feather name="shopping-bag" size={20} color="#0F172A" />,
       route: "/(root)/(tabs)/order",
     },
+    {
+      id: 4,
+      title: "FAQs",
+      icon: <Feather name="help-circle" size={20} color="#0F172A" />,
+      route: "/faq",
+    },
+    {
+      id: 5,
+      title: "Contact Us",
+      icon: <Feather name="mail" size={20} color="#0F172A" />,
+      route: "/contact",
+    },
   ];
 
   return (

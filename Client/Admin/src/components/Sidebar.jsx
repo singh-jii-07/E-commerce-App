@@ -9,6 +9,8 @@ import {
   Users,
   LogOut,
   Store,
+  HelpCircle,
+  Mail,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -26,6 +28,8 @@ const Sidebar = () => {
     { name: "Categories", path: "/categories", icon: Tags },
     { name: "Orders", path: "/orders", icon: ShoppingBag },
     { name: "Users", path: "/users", icon: Users },
+    { name: "FAQs", path: "/faqs", icon: HelpCircle },
+    { name: "Contact Messages", path: "/contacts", icon: Mail },
   ];
 
   return (
