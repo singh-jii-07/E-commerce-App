@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const AUTH_BASE_URL = "http://localhost:5000/api";
+export const AUTH_BASE_URL = "https://e-commerce-app-px6e.onrender.com/api";
 export const ECOMMERCE_BASE_URL = "http://localhost:5001/api";
 
 // Create instance for Auth Service (Port 5000)
