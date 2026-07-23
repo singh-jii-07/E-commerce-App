@@ -16,7 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import axios from "axios";
+import authService from "../../services/authService";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -34,19 +34,16 @@ export default function SignIn() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:5000/api/user/login",
-        {
-          email: email.trim().toLowerCase(),
-          password: password.trim(),
-        }
-      );
+      const data = await authService.login({
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+      });
 
-      if (response.data.token) {
-        await AsyncStorage.setItem("token", response.data.token);
+      if (data.token) {
+        await AsyncStorage.setItem("token", data.token);
       }
 
-      Alert.alert("Success", response.data.message || "Login Successful");
+      Alert.alert("Success", data.message || "Login Successful");
       router.replace("/(tabs)");
     } catch (error) {
       console.log(error);

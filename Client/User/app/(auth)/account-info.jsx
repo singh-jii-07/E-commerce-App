@@ -13,8 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import API_CONFIG from "../../config/apiConfig";
+import authService from "../../services/authService";
 import addressService from "../../services/addressService";
 
 export default function AccountInfo() {
@@ -32,14 +31,9 @@ export default function AccountInfo() {
       let profileData = null;
       if (token) {
         try {
-          const profileRes = await axios.get(
-            `${API_CONFIG.AUTH_BASE_URL}/user/profile`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          if (profileRes.data && profileRes.data.success) {
-            profileData = profileRes.data.user;
+          const profileRes = await authService.getProfile();
+          if (profileRes && profileRes.success) {
+            profileData = profileRes.user;
             setUserProfile(profileData);
           }
         } catch (err) {

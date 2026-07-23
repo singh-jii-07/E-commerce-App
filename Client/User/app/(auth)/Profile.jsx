@@ -11,7 +11,7 @@ import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import authService from "../../services/authService";
 import { handleLogout } from "./Logout";
 
 const Profile = () => {
@@ -23,16 +23,9 @@ const Profile = () => {
       try {
         const token = await AsyncStorage.getItem("token");
         if (token) {
-          const response = await axios.get(
-            "http://localhost:5000/api/user/profile",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-          if (response.data && response.data.success) {
-            setUser(response.data.user);
+          const data = await authService.getProfile();
+          if (data && data.success) {
+            setUser(data.user);
           }
         }
       } catch (error) {

@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import axios from "axios";
+import authService from "../../services/authService";
 
 export default function VerifyOtp() {
   const { email: paramEmail } = useLocalSearchParams();
@@ -102,19 +102,19 @@ export default function VerifyOtp() {
 
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/user/otp", {
+      const data = await authService.verifyOtp({
         email,
         otp: otpString,
       });
 
-      if (response.data.success) {
-        Alert.alert("Success", response.data.message || "OTP verified successfully.");
+      if (data.success) {
+        Alert.alert("Success", data.message || "OTP verified successfully.");
         router.push({
           pathname: "/(auth)/reset-password",
           params: { email },
         });
       } else {
-        Alert.alert("Error", response.data.message || "Invalid OTP.");
+        Alert.alert("Error", data.message || "Invalid OTP.");
       }
     } catch (error) {
       console.log("Verify OTP Error: ", error);
@@ -133,17 +133,17 @@ export default function VerifyOtp() {
 
     try {
       setResendLoading(true);
-      const response = await axios.post("http://localhost:5000/api/user/forgot", {
+      const data = await authService.forgotPassword({
         email,
       });
 
-      if (response.data.success) {
+      if (data.success) {
         Alert.alert("Success", "A new OTP code has been sent to your email.");
         setTimer(60);
         setOtp(["", "", "", "", "", ""]);
         inputsRef.current[0]?.focus();
       } else {
-        Alert.alert("Error", response.data.message || "Failed to resend OTP.");
+        Alert.alert("Error", data.message || "Failed to resend OTP.");
       }
     } catch (error) {
       console.log("Resend OTP Error: ", error);

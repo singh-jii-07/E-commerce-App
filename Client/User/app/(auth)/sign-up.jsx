@@ -16,7 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import axios from "axios";
+import authService from "../../services/authService";
 
 export default function SignUp() {
   const [username, setUsername] = useState("");
@@ -50,25 +50,21 @@ export default function SignUp() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:5000/api/user/register",
-        {
-          username: username.trim(),
-          email: email.trim().toLowerCase(),
-          password: password.trim(),
-        }
-      );
+      const data = await authService.register({
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+      });
 
-      console.log("STATUS :", response.status);
-      console.log("RESPONSE :", response.data);
+      console.log("RESPONSE :", data);
 
-      if (response.data.token) {
-        await AsyncStorage.setItem("token", response.data.token);
+      if (data.token) {
+        await AsyncStorage.setItem("token", data.token);
       }
 
       Alert.alert(
         "Success",
-        response.data.message || "Account Created Successfully"
+        data.message || "Account Created Successfully"
       );
 
       router.replace("/(auth)/sign-in");

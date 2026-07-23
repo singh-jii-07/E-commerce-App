@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import axios from "axios";
+import authService from "../../services/authService";
 
 export default function ResetPassword() {
   const { email: paramEmail } = useLocalSearchParams();
@@ -63,21 +63,18 @@ export default function ResetPassword() {
 
     try {
       setLoading(true);
-      const response = await axios.post(
-        "http://localhost:5000/api/user/changepassword",
-        {
-          email,
-          newPassword: newPassword.trim(),
-          confirmPassword: confirmPassword.trim(),
-        }
-      );
+      const data = await authService.resetPassword({
+        email,
+        newPassword: newPassword.trim(),
+        confirmPassword: confirmPassword.trim(),
+      });
 
-      if (response.data.success) {
+      if (data.success) {
         if (Platform.OS === "web") {
-          window.alert(response.data.message || "Password reset successfully.");
+          window.alert(data.message || "Password reset successfully.");
           router.replace("/(auth)/sign-in");
         } else {
-          Alert.alert("Success", response.data.message || "Password reset successfully.", [
+          Alert.alert("Success", data.message || "Password reset successfully.", [
             {
               text: "Go to Sign In",
               onPress: () => {
@@ -88,9 +85,9 @@ export default function ResetPassword() {
         }
       } else {
         if (Platform.OS === "web") {
-          window.alert(response.data.message || "Failed to reset password.");
+          window.alert(data.message || "Failed to reset password.");
         } else {
-          Alert.alert("Error", response.data.message || "Failed to reset password.");
+          Alert.alert("Error", data.message || "Failed to reset password.");
         }
       }
     } catch (error) {

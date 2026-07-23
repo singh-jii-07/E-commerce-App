@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import axios from "axios";
+import authService from "../../services/authService";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -35,19 +35,19 @@ export default function ForgotPassword() {
 
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/user/forgot", {
+      const data = await authService.forgotPassword({
         email: email.trim().toLowerCase(),
       });
 
-      if (response.data.success) {
+      if (data.success) {
         await AsyncStorage.setItem("resetEmail", email.trim().toLowerCase());
-        Alert.alert("Success", response.data.message || "OTP sent successfully.");
+        Alert.alert("Success", data.message || "OTP sent successfully.");
         router.push({
           pathname: "/(auth)/verify-otp",
           params: { email: email.trim().toLowerCase() },
         });
       } else {
-        Alert.alert("Error", response.data.message || "Failed to send OTP.");
+        Alert.alert("Error", data.message || "Failed to send OTP.");
       }
     } catch (error) {
       console.log("Forgot Password Error: ", error);

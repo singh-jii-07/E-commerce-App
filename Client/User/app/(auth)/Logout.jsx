@@ -2,23 +2,11 @@ import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import axios from "axios";
+import authService from "../../services/authService";
 
 export const handleLogout = async () => {
   try {
-    const token = await AsyncStorage.getItem("token");
-
-    if (token) {
-      await axios.post(
-        "http://localhost:5000/api/user/logout",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    }
+    await authService.logout();
   } catch (error) {
     console.log("Logout API error:", error);
   } finally {
