@@ -10,6 +10,7 @@ import cartRoute from "./App/routes/Cart.js";
 import reviewRoute from "./App/routes/Review.js";
 import orderRoute from "./App/routes/Order.js";
 import contactRoute from "./App/routes/Contact.js";
+import faqRoutes from "./App/routes/Faq.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/review", reviewRoute);
 app.use("/api/order", orderRoute);
 app.use("/api/payment", orderRoute);
 app.use("/api/contact",contactRoute);
+app.use("/api/faq",faqRoutes)
 
 app.get("/", (req, res) => {
   res.send("Welcome to E-commerce API");
