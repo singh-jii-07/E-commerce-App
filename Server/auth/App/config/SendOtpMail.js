@@ -13,7 +13,7 @@ export const sendOtpMail = async (newUser, otp) => {
     await transporter.sendMail({
       from: `"E-commerce App" <nileshkumarsingh060@gmail.com>`,
       to: newUser.email,
-      subject: "Your OTP for Email Verification - NKPR",
+      subject: "Your OTP for Email Verification ",
       html: `
 <div style="margin:0;padding:0;background:#f5f7fa;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fa;padding:40px 0;">
