@@ -19,9 +19,11 @@ import { useRouter, useFocusEffect } from "expo-router";
 import cartService from "../../../services/cartService";
 import orderService from "../../../services/orderService";
 import addressService from "../../../services/addressService";
+import { useCart } from "../../../context/CartContext";
 
 const MyCart = () => {
   const router = useRouter();
+  const { fetchCartCount } = useCart();
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,7 @@ const MyCart = () => {
       } else {
         setCartItems([]);
       }
+      fetchCartCount();
     } catch (error) {
       console.log("Error fetching cart:", error);
       setCartItems([]);
@@ -71,6 +74,7 @@ const MyCart = () => {
             item._id === cartItem._id ? { ...item, quantity: newQty } : item
           )
         );
+        fetchCartCount();
       } else {
         Alert.alert("Notice", res?.message || "Could not update quantity.");
       }
@@ -88,6 +92,7 @@ const MyCart = () => {
       const res = await cartService.deleteCartItem(cartItemId);
       if (res && res.success) {
         setCartItems((prev) => prev.filter((item) => item._id !== cartItemId));
+        fetchCartCount();
       } else {
         Alert.alert("Notice", res?.message || "Failed to remove item.");
       }

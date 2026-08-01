@@ -2,8 +2,10 @@ import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useCart } from "../../../context/CartContext";
 
 export default function TabLayout() {
+  const { cartCount } = useCart();
   return (
     <Tabs
       screenOptions={{
@@ -51,6 +53,11 @@ export default function TabLayout() {
         name="myCard"
         options={{
           title: "My Cart",
+          tabBarBadge: cartCount > 0 ? cartCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: "#FF6B35",
+            color: "#FFFFFF",
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="basket-outline" size={28} color={color} />
           ),

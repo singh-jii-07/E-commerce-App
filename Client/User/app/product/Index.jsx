@@ -18,9 +18,11 @@ import { useRouter } from "expo-router";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 import cartService from "../../services/cartService";
+import { useCart } from "../../context/CartContext";
 
 const ProductListing = () => {
   const router = useRouter();
+  const { fetchCartCount } = useCart();
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(["All"]);
@@ -102,6 +104,7 @@ const ProductListing = () => {
       const res = await cartService.addToCart(product._id, 1);
       if (res && res.success) {
         Alert.alert("Success", `${product.name} added to cart!`);
+        fetchCartCount();
       } else {
         Alert.alert("Notice", res?.message || "Failed to add product to cart.");
       }

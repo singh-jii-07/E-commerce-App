@@ -18,10 +18,12 @@ import { Ionicons } from "@expo/vector-icons";
 import productService from "../../services/productService";
 import reviewService from "../../services/reviewService";
 import cartService from "../../services/cartService";
+import { useCart } from "../../context/CartContext";
 
 const ProductDetails = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { fetchCartCount } = useCart();
 
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -95,6 +97,7 @@ const ProductDetails = () => {
       const res = await cartService.addToCart(product._id, quantity);
       if (res && res.success) {
         Alert.alert("Success", `${quantity} ${product.unit || 'unit(s)'} of ${product.name} added to cart!`);
+        fetchCartCount();
       } else {
         Alert.alert("Notice", res?.message || "Failed to add product to cart.");
       }
