@@ -1,6 +1,6 @@
 export const API_CONFIG = {
-  AUTH_BASE_URL: "https://e-commerce-app-px6e.onrender.com/api",
-  ECOMMERCE_BASE_URL: "https://e-commerce-app-1-a9fy.onrender.com/api",
+  AUTH_BASE_URL: "http://10.0.2.2:5000/api",
+  ECOMMERCE_BASE_URL: "http://10.0.2.2:5001/api",
 };
 
 export default API_CONFIG;
