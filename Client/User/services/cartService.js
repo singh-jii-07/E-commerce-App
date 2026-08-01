@@ -40,6 +40,17 @@ export const cartService = {
     );
     return response.data;
   },
+
+  // Update cart item quantity
+  updateCartItem: async (id, quantity) => {
+    const headers = await getAuthHeaders();
+    const response = await axios.put(
+      `${API_CONFIG.ECOMMERCE_BASE_URL}/cart/update/${id}`,
+      { quantity },
+      { headers }
+    );
+    return response.data;
+  },
 };
 
 export default cartService;

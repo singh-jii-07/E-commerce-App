@@ -138,4 +138,69 @@ import mongoose from "mongoose";
   }
 };
 
-export{addToCart,getMyCart,deleteCartItem}
+const updateCartItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    const userId = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Cart ID",
+      });
+    }
+
+    const cartItem = await Cart.findOne({
+      _id: id,
+      user: userId,
+    });
+
+    if (!cartItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart item not found",
+      });
+    }
+
+    const qty = Number(quantity);
+    if (isNaN(qty) || qty <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be at least 1",
+      });
+    }
+
+    const product = await Product.findById(cartItem.product);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    if (product.stock < qty) {
+      return res.status(400).json({
+        success: false,
+        message: `Only ${product.stock} items available in stock.`,
+      });
+    }
+
+    cartItem.quantity = qty;
+    await cartItem.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Cart item updated successfully",
+      data: cartItem,
+    });
+  } catch (error) {
+    console.error("UPDATE CART ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export { addToCart, getMyCart, deleteCartItem, updateCartItem };
