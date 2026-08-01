@@ -18,7 +18,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import authService from "../../services/authService";
 
 export default function VerifyOtp() {
-  const { email: paramEmail } = useLocalSearchParams();
+  const { email: paramEmail, mode } = useLocalSearchParams();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -109,10 +109,14 @@ export default function VerifyOtp() {
 
       if (data.success) {
         Alert.alert("Success", data.message || "OTP verified successfully.");
-        router.push({
-          pathname: "/(auth)/reset-password",
-          params: { email },
-        });
+        if (mode === "signup") {
+          router.replace("/(auth)/sign-in");
+        } else {
+          router.replace({
+            pathname: "/(auth)/reset-password",
+            params: { email },
+          });
+        }
       } else {
         Alert.alert("Error", data.message || "Invalid OTP.");
       }

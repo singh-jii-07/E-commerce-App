@@ -47,10 +47,35 @@ export default function SignIn() {
       router.replace("/(tabs)");
     } catch (error) {
       console.log(error);
-      Alert.alert(
-        "Login Failed",
-        error.response?.data?.message || "Something went wrong"
-      );
+      const errMsg = error.response?.data?.message || "Something went wrong";
+      const status = error.response?.status;
+
+      if (status === 403 && errMsg.toLowerCase().includes("verify")) {
+        Alert.alert(
+          "Verification Required",
+          errMsg,
+          [
+            {
+              text: "Verify Now",
+              onPress: () => {
+                router.push({
+                  pathname: "/(auth)/verify-otp",
+                  params: { email: email.trim().toLowerCase(), mode: "signup" },
+                });
+              }
+            },
+            {
+              text: "Cancel",
+              style: "cancel"
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Login Failed",
+          errMsg
+        );
+      }
     } finally {
       setLoading(false);
     }

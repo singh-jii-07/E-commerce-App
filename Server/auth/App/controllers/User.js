@@ -12,11 +12,31 @@ const register = async (req, res) => {
       });
     }
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
     const userExisting = await User.findOne({ email });
     if (userExisting) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
+      if (userExisting.isVerified) {
+        return res.status(400).json({
+          message: "User already exists",
+        });
+      } else {
+        // Overwrite unverified account details and send new OTP
+        userExisting.username = username;
+        userExisting.password = await bcrypt.hash(password, 10);
+        userExisting.otp = otp;
+        userExisting.otpExpiry = otpExpiry;
+
+        await userExisting.save();
+        await sendOtpMail(userExisting);
+
+        return res.status(200).json({
+          success: true,
+          message: "Registration pending. OTP sent to your email.",
+          email: userExisting.email,
+        });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -25,11 +45,17 @@ const register = async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      otp,
+      otpExpiry,
+      isVerified: false,
     });
 
+    await sendOtpMail(newUser);
+
     return res.status(201).json({
-      message: "User registered successfully",
-      user: newUser,
+      success: true,
+      message: "Registration pending. OTP sent to your email.",
+      email: newUser.email,
     });
   } catch (err) {
     console.error("REGISTER ERROR ", err);
@@ -60,6 +86,13 @@ const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Invalid Email or Password",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email address before logging in.",
       });
     }
 
@@ -279,6 +312,13 @@ const verifyOtp = async (req, res) => {
     }
 
     console.log("verifyOtp succeeded for user:", email);
+
+    if (!user.isVerified) {
+      user.isVerified = true;
+      user.otp = null;
+      user.otpExpiry = null;
+      await user.save();
+    }
 
     return res.status(200).json({
       success: true,

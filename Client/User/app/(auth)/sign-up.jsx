@@ -58,16 +58,15 @@ export default function SignUp() {
 
       console.log("RESPONSE :", data);
 
-      if (data.token) {
-        await AsyncStorage.setItem("token", data.token);
-      }
-
       Alert.alert(
-        "Success",
-        data.message || "Account Created Successfully"
+        "Verification Required",
+        data.message || "An OTP code has been sent to your email. Please verify your account."
       );
 
-      router.replace("/(auth)/sign-in");
+      router.replace({
+        pathname: "/(auth)/verify-otp",
+        params: { email: email.trim().toLowerCase(), mode: "signup" },
+      });
     } catch (error) {
       console.log("SIGNUP ERROR :", error);
       Alert.alert(
