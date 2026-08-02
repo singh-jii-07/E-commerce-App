@@ -607,6 +607,290 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// Download Invoice
+const downloadInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId)
+      .populate("items.product")
+      .populate("address");
+
+    if (!order) {
+      return res.status(404).send("<h1>Order not found</h1>");
+    }
+
+    // Only allow user to download if it belongs to them or if they are admin
+    if (order.user.toString() !== req.userId && req.role !== "admin") {
+      return res.status(403).send("<h1>Access denied</h1>");
+    }
+
+    // Ensure status is confirmed
+    const allowedStatuses = ["Confirmed", "Packed", "Shipped", "Delivered"];
+    if (!allowedStatuses.includes(order.orderStatus)) {
+      return res.status(400).send("<h1>Invoice is only available for confirmed orders</h1>");
+    }
+
+    // Fetch user details from auth service
+    let customerEmail = "N/A";
+    try {
+      const token = req.query.token || req.headers.authorization?.split(" ")[1];
+      const authUrl = process.env.AUTH_SERVICE_URL || "http://localhost:5000";
+      const authRes = await fetch(`${authUrl}/api/user/find/${order.user}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const authData = await authRes.json();
+      if (authData && authData.success && authData.user) {
+        customerEmail = authData.user.email || customerEmail;
+      }
+    } catch (authErr) {
+      console.error("Error fetching user email for invoice:", authErr.message);
+    }
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice - ${order._id}</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      margin: 0;
+      padding: 40px;
+      background-color: #f8fafc;
+    }
+    .invoice-card {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 50px;
+      border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 30px;
+      margin-bottom: 30px;
+    }
+    .logo-section h2 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo-section span {
+      color: #4f46e5;
+    }
+    .invoice-title {
+      text-align: right;
+    }
+    .invoice-title h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 900;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .invoice-title p {
+      margin: 5px 0 0;
+      color: #64748b;
+      font-size: 14px;
+      font-family: monospace;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    .info-block h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+    }
+    .info-block p {
+      margin: 0 0 5px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .info-block strong {
+      color: #0f172a;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+    }
+    th {
+      background-color: #f8fafc;
+      color: #64748b;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 16px;
+      font-size: 15px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .totals-section {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .totals-table {
+      width: 300px;
+      margin-bottom: 0;
+    }
+    .totals-table td {
+      padding: 10px 0;
+      border-bottom: none;
+    }
+    .totals-table tr.grand-total td {
+      border-top: 2px solid #e2e8f0;
+      padding-top: 15px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .btn-container {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .print-btn {
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+      transition: all 0.2s;
+    }
+    .print-btn:hover {
+      background-color: #4338ca;
+    }
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+      }
+      .invoice-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+      .btn-container {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="btn-container">
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+  </div>
+  <div class="invoice-card">
+    <div class="header">
+      <div class="logo-section">
+        <h2>E-<span>Commerce</span></h2>
+      </div>
+      <div class="invoice-title">
+        <h1>Invoice</h1>
+        <p>Order ID: #${order._id.toString().toUpperCase()}</p>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-block">
+        <h3>Billed To</h3>
+        <p><strong>${order.address?.fullName || "Valued Customer"}</strong></p>
+        <p>${order.address?.addressLine1 || ""}</p>
+        <p>${order.address?.city || ""}, ${order.address?.state || ""} - ${order.address?.postalCode || ""}</p>
+        <p>Phone: ${order.address?.phone || "N/A"}</p>
+        <p>Email: ${customerEmail}</p>
+      </div>
+      <div class="info-block" style="text-align: right;">
+        <h3>Invoice Details</h3>
+        <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+        <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+        <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+        <p><strong>Status:</strong> ${order.orderStatus}</p>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th class="text-right">Price</th>
+          <th class="text-right">Qty</th>
+          <th class="text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${order.items.map(item => `
+          <tr>
+            <td>${item.product?.name || 'Product'}</td>
+            <td class="text-right">₹${item.price.toFixed(2)}</td>
+            <td class="text-right">${item.quantity}</td>
+            <td class="text-right">₹${(item.price * item.quantity).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="totals-section">
+      <table class="totals-table">
+        <tbody>
+          <tr>
+            <td>Subtotal</td>
+            <td class="text-right">₹${order.totalAmount.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td>Shipping</td>
+            <td class="text-right">₹0.00</td>
+          </tr>
+          <tr class="grand-total">
+            <td>Grand Total</td>
+            <td class="text-right">₹${order.totalAmount.toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    res.setHeader("Content-Type", "text/html");
+    return res.status(200).send(htmlContent);
+  } catch (error) {
+    console.error("Download Invoice Error:", error);
+    return res.status(500).send("<h1>Internal Server Error</h1>");
+  }
+};
+
 export {
   createOrder,
   createOrderRazorpay,
@@ -616,4 +900,5 @@ export {
   cancelOrder,
   getAllOrders,
   updateOrderStatus,
+  downloadInvoice,
 };

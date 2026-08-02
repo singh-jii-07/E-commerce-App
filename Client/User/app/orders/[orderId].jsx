@@ -13,7 +13,10 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Linking,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import API_CONFIG from "../../config/apiConfig";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import orderService from "../../services/orderService";
@@ -235,10 +238,26 @@ const OrderDetails = () => {
     }
   };
 
+  const handleDownloadInvoice = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Authentication Required", "Please log in to download the invoice.");
+        return;
+      }
+      const url = `${API_CONFIG.ECOMMERCE_BASE_URL}/order/invoice/${order._id}?token=${token}`;
+      await Linking.openURL(url);
+    } catch (err) {
+      console.log("Invoice download error:", err);
+      Alert.alert("Error", "Failed to initiate invoice download.");
+    }
+  };
+
   const currentStageIdx = getStageIndex(order?.orderStatus);
   const isDelivered = order?.orderStatus === "Delivered";
   const isCancelled = order?.orderStatus === "Cancelled";
   const canCancel = !["Delivered", "Cancelled"].includes(order?.orderStatus || "");
+  const canDownloadInvoice = ["Confirmed", "Packed", "Shipped", "Delivered"].includes(order?.orderStatus || "");
 
   return (
     <View style={styles.darkNavyContainer}>
@@ -396,6 +415,17 @@ const OrderDetails = () => {
               <Text style={styles.totalHeaderLabel}>Grand Total</Text>
               <Text style={styles.totalHeaderVal}>₹{order.totalAmount?.toFixed(2)}</Text>
             </View>
+
+            {canDownloadInvoice && (
+              <TouchableOpacity
+                style={styles.invoiceBtn}
+                onPress={handleDownloadInvoice}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="document-text-outline" size={16} color="#4F46E5" style={{ marginRight: 6 }} />
+                <Text style={styles.invoiceBtnText}>Download Invoice</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
 
@@ -804,6 +834,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
     color: "#FF5500",
+  },
+  invoiceBtn: {
+    backgroundColor: "#EEF2F6",
+    borderColor: "#4F46E5",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: 16,
+    paddingVertical: 12,
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  invoiceBtnText: {
+    color: "#4F46E5",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   /* Bottom Bar Button matching Image 1 & 2 */

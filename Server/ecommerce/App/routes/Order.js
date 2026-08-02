@@ -8,6 +8,7 @@ import {
   cancelOrder,
   getAllOrders,
   updateOrderStatus,
+  downloadInvoice,
 } from "../controllers/Order.js";
 import auth from "../middleware/Auth.js";
 import isadmin from "../middleware/isadmin.js";
@@ -25,5 +26,6 @@ orderRoute.get("/getbyid/:id", auth, getOrderById);
 orderRoute.delete("/cancel/:orderId", auth, cancelOrder);
 orderRoute.get("/all", auth, isadmin, getAllOrders);
 orderRoute.put("/update/:id", auth, isadmin, updateOrderStatus);
+orderRoute.get("/invoice/:orderId", auth, downloadInvoice);
 
 export default orderRoute;
