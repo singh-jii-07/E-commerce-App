@@ -633,15 +633,22 @@ const downloadInvoice = async (req, res) => {
     let customerEmail = "N/A";
     try {
       const token = req.query.token || req.headers.authorization?.split(" ")[1];
-      const authUrl = process.env.AUTH_SERVICE_URL || "http://localhost:5000";
-      const authRes = await fetch(`${authUrl}/api/user/find/${order.user}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const authData = await authRes.json();
-      if (authData && authData.success && authData.user) {
-        customerEmail = authData.user.email || customerEmail;
+      if (token) {
+        const authUrl = process.env.AUTH_SERVICE_URL || "http://localhost:5000";
+        const isOwner = order.user.toString() === req.userId;
+        const fetchUrl = isOwner 
+          ? `${authUrl}/api/user/profile` 
+          : `${authUrl}/api/user/find/${order.user}`;
+
+        const authRes = await fetch(fetchUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const authData = await authRes.json();
+        if (authData && authData.success && authData.user) {
+          customerEmail = authData.user.email || customerEmail;
+        }
       }
     } catch (authErr) {
       console.error("Error fetching user email for invoice:", authErr.message);

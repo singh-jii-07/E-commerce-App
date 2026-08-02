@@ -81,9 +81,7 @@ export default function SignIn() {
     }
   };
 
-  const handleSocialSignIn = (platform) => {
-    Alert.alert(`${platform} Sign In`, `${platform} authentication is not configured yet.`);
-  };
+  
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -199,43 +197,7 @@ export default function SignIn() {
             )}
           </View>
 
-          {/* Or continue with divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or continue with</Text>
-            <View style={styles.dividerLine} />
-          </View>
 
-          {/* Social buttons */}
-          <View style={styles.socialContainer}>
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={() => handleSocialSignIn("Google")}
-              activeOpacity={0.8}
-            >
-              <FontAwesome
-                name="google"
-                size={18}
-                color="#EA4335"
-                style={styles.socialIcon}
-              />
-              <Text style={styles.socialButtonText}>Continue with Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={() => handleSocialSignIn("Apple")}
-              activeOpacity={0.8}
-            >
-              <FontAwesome
-                name="apple"
-                size={18}
-                color="#000000"
-                style={styles.socialIcon}
-              />
-              <Text style={styles.socialButtonText}>Continue with Apple</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
 
         {/* Footer Redirect link */}

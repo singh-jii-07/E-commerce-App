@@ -45,20 +45,20 @@ import Product from "../models/Product.js";
       });
     }
 
-    // Fetch user details from auth service
+   
     let userName = "Verified Customer";
     try {
       const token = req.headers.authorization?.split(" ")[1];
       if (token) {
         const authUrl = process.env.AUTH_SERVICE_URL || "http://localhost:5000";
-        const authRes = await fetch(`${authUrl}/api/user/find/${userId}`, {
+        const authRes = await fetch(`${authUrl}/api/user/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         const authData = await authRes.json();
         if (authData && authData.success && authData.user) {
-          userName = authData.user.name || userName;
+          userName = authData.user.username || userName;
         }
       }
     } catch (authErr) {
