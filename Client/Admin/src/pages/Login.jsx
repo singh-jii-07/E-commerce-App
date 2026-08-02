@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import authService from "../services/authService";
@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   MailCheck,
 } from "lucide-react";
+import { loadCaptchaEnginge, LoadCanvasTemplate, validateCaptcha } from "react-simple-captcha";
 
 const Login = () => {
   const [view, setView] = useState("login"); // "login" | "forgot" | "verify" | "reset"
@@ -26,12 +27,33 @@ const Login = () => {
   const location = useLocation();
 
   const from = location.state?.from?.pathname || "/";
+  const [captchaValue, setCaptchaValue] = useState("");
+
+  useEffect(() => {
+    if (view === "login") {
+      setTimeout(() => {
+        loadCaptchaEnginge(6);
+      }, 100);
+    }
+  }, [view]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!email || !password) {
       setError("Please fill in all fields.");
+      return;
+    }
+
+    if (!captchaValue) {
+      setError("Please enter the captcha.");
+      return;
+    }
+
+    if (!validateCaptcha(captchaValue)) {
+      setError("Incorrect captcha. Please try again.");
+      setCaptchaValue("");
+      loadCaptchaEnginge(6);
       return;
     }
 
@@ -48,12 +70,14 @@ const Login = () => {
         navigate(from, { replace: true });
       } else {
         setError(data.message || "Login failed.");
+        loadCaptchaEnginge(6);
       }
     } catch (err) {
       console.error("Login error:", err);
       setError(
         err.response?.data?.message || err.message || "Unable to connect to server."
       );
+      loadCaptchaEnginge(6);
     } finally {
       setLoading(false);
     }
@@ -226,6 +250,24 @@ const Login = () => {
                   placeholder="••••••••"
                   className="w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   required
+                />
+              </div>
+
+              {/* Captcha Section */}
+              <div className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Verification Code
+                </label>
+                <div className="flex items-center justify-between bg-white px-2 py-1.5 rounded border border-gray-200 mb-1 select-none">
+                  <LoadCanvasTemplate />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={captchaValue}
+                  onChange={(e) => setCaptchaValue(e.target.value)}
+                  placeholder="Enter Captcha"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />
               </div>
 
