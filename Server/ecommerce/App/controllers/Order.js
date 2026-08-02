@@ -341,6 +341,7 @@ const verifyRazorpay = async (req, res) => {
     }
 
     order.paymentStatus = "Paid";
+    order.orderStatus = "Confirmed";
     if (razorpay_payment_id) order.razorpayPaymentId = razorpay_payment_id;
     if (razorpay_signature) order.razorpaySignature = razorpay_signature;
     order.paidAt = new Date();

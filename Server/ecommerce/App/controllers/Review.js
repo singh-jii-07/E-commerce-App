@@ -45,9 +45,29 @@ import Product from "../models/Product.js";
       });
     }
 
-    
+    // Fetch user details from auth service
+    let userName = "Verified Customer";
+    try {
+      const token = req.headers.authorization?.split(" ")[1];
+      if (token) {
+        const authUrl = process.env.AUTH_SERVICE_URL || "http://localhost:5000";
+        const authRes = await fetch(`${authUrl}/api/user/find/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const authData = await authRes.json();
+        if (authData && authData.success && authData.user) {
+          userName = authData.user.name || userName;
+        }
+      }
+    } catch (authErr) {
+      console.error("Error fetching user name for review:", authErr.message);
+    }
+
     const review = await Review.create({
       user: userId,
+      userName,
       product,
       rating,
       comment,
@@ -83,14 +103,23 @@ import Product from "../models/Product.js";
     const reviews = await Review.find({
       product: productId,
     })
-      .populate("user", "name email")
       .sort({ createdAt: -1 });
+
+    const formattedReviews = reviews.map(rev => {
+      const obj = rev.toObject();
+      return {
+        ...obj,
+        user: {
+          name: obj.userName || "Verified Customer"
+        }
+      };
+    });
 
     return res.status(200).json({
       success: true,
       message: "Reviews fetched successfully",
-      count: reviews.length,
-      data: reviews,
+      count: formattedReviews.length,
+      data: formattedReviews,
     });
   } catch (error) {
     console.error("GET REVIEW ERROR:", error);
