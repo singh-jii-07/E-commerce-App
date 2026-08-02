@@ -94,6 +94,16 @@ const createOrder = async (req, res) => {
       orderStatus: "Pending",
     });
 
+    // Ensure User document exists in ecommerce DB and push order ID
+    let userDoc = await User.findOne({ authUserId: userId });
+    if (!userDoc) {
+      userDoc = await User.create({
+        authUserId: userId,
+      });
+    }
+    userDoc.orders.push(order._id);
+    await userDoc.save();
+
     // Deduct stock for ordered products
     for (const cartItem of cartItems) {
       await Product.findByIdAndUpdate(cartItem.product._id, {
@@ -234,6 +244,17 @@ const createOrderRazorpay = async (req, res) => {
       paymentStatus: "Pending",
       orderStatus: "Pending",
     });
+
+    // Ensure User document exists in ecommerce DB and push order ID
+    // Ensure User document exists in ecommerce DB and push order ID
+    let userDoc = await User.findOne({ authUserId: userId });
+    if (!userDoc) {
+      userDoc = await User.create({
+        authUserId: userId,
+      });
+    }
+    userDoc.orders.push(order._id);
+    await userDoc.save();
 
     const options = {
       amount: Math.round(totalAmount * 100),
@@ -476,7 +497,6 @@ const cancelOrder = async (req, res) => {
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("user")
       .populate("items.product", "name price images")
       .populate("address")
       .sort({ createdAt: -1 });

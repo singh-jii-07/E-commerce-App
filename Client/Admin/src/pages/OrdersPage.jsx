@@ -220,8 +220,16 @@ const OrdersPage = () => {
                       <td className="px-4 py-3">
                         <p className="font-semibold text-gray-900">{order.address?.fullName || "Customer"}</p>
                         <p className="text-[11px] text-gray-500">{order.address?.phone || "N/A"}</p>
+                        <p className="text-[10px] text-gray-400 font-mono mt-0.5">UID: {order.user?._id || order.user}</p>
                       </td>
-                      <td className="px-4 py-3">{order.items?.length || 0} items</td>
+                      <td className="px-4 py-3">
+                        <p>{order.items?.length || 0} items</p>
+                        {order.items?.map((item, idx) => (
+                          <p key={idx} className="text-[10px] text-gray-400 font-mono mt-0.5">
+                            PID: {item.product?._id || item.product}
+                          </p>
+                        ))}
+                      </td>
                       <td className="px-4 py-3 font-bold text-gray-900">
                         ₹{order.totalAmount}
                         <span className="block font-normal text-[10px] text-gray-500">{order.paymentMethod}</span>
@@ -289,6 +297,7 @@ const OrdersPage = () => {
                 {selectedOrderDetails.address?.city}, {selectedOrderDetails.address?.state} - {selectedOrderDetails.address?.postalCode}
               </p>
               <p className="text-gray-600 font-mono">Phone: {selectedOrderDetails.address?.phone}</p>
+              <p className="text-gray-600 font-mono">User ID: {selectedOrderDetails.user?._id || selectedOrderDetails.user}</p>
             </div>
 
             {/* Items */}
@@ -306,6 +315,7 @@ const OrdersPage = () => {
                       <div>
                         <p className="font-semibold text-gray-900">{item.product?.name || "Product"}</p>
                         <p className="text-[11px] text-gray-500">Qty: {item.quantity}</p>
+                        <p className="text-[10px] text-gray-500 font-mono mt-0.5">Product ID: {item.product?._id || item.product}</p>
                       </div>
                     </div>
                     <p className="font-bold text-gray-900">₹{item.price * item.quantity}</p>
