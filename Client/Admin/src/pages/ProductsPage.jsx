@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import productService from "../services/productService";
+import categoryService from "../services/categoryService";
 import {
   Plus,
   Search,
@@ -16,6 +17,7 @@ const UNITS = ["Kg", "Gram", "Piece", "Litre"];
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("ALL");
@@ -37,23 +39,29 @@ const ProductsPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchProducts = async () => {
+  const fetchProductsAndCategories = async () => {
     setLoading(true);
     try {
-      const res = await productService.getProducts();
-      if (res.success) {
-        setProducts(res.data);
+      const [prodRes, catRes] = await Promise.all([
+        productService.getProducts(),
+        categoryService.getCategories(),
+      ]);
+      if (prodRes.success) {
+        setProducts(prodRes.data);
+      }
+      if (catRes.success && Array.isArray(catRes.data)) {
+        setCategories(catRes.data);
       }
     } catch (err) {
-      console.error("Fetch products error:", err);
-      showFeedback("error", "Failed to load products.");
+      console.error("Fetch products/categories error:", err);
+      showFeedback("error", "Failed to load page data.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchProductsAndCategories();
   }, []);
 
   const showFeedback = (type, message) => {
@@ -61,20 +69,12 @@ const ProductsPage = () => {
     setTimeout(() => setFeedback({ type: "", message: "" }), 5000);
   };
 
-  const uniqueCategories = Array.from(
-    new Map(
-      products
-        .filter((p) => p.category)
-        .map((p) => [typeof p.category === "object" ? p.category._id : p.category, p.category])
-    ).values()
-  );
-
   const handleOpenAdd = () => {
     setFormData({
       name: "",
       description: "",
       price: "",
-      category: uniqueCategories[0] ? (typeof uniqueCategories[0] === "object" ? uniqueCategories[0]._id : uniqueCategories[0]) : "",
+      category: categories[0] ? categories[0]._id : "",
       stock: "",
       unit: "Kg",
       images: "",
@@ -232,15 +232,11 @@ const ProductsPage = () => {
             className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-indigo-500"
           >
             <option value="ALL">All Categories</option>
-            {uniqueCategories.map((cat) => {
-              const id = typeof cat === "object" ? cat._id : cat;
-              const name = typeof cat === "object" ? cat.name : id;
-              return (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              );
-            })}
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -454,15 +450,11 @@ const ProductsPage = () => {
                     <option value="" disabled>
                       Select Category
                     </option>
-                    {uniqueCategories.map((cat) => {
-                      const id = typeof cat === "object" ? cat._id : cat;
-                      const name = typeof cat === "object" ? cat.name : id;
-                      return (
-                        <option key={id} value={id}>
-                          {name}
-                        </option>
-                      );
-                    })}
+                    {categories.map((cat) => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

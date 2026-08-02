@@ -9,6 +9,7 @@ import {
   Info,
   Loader2,
   X,
+  Trash2,
 } from "lucide-react";
 
 const CategoriesPage = () => {
@@ -18,32 +19,23 @@ const CategoriesPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
-  const fetchCategoriesFromProducts = async () => {
+  const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await productService.getProducts();
+      const res = await categoryService.getCategories();
       if (res.success && Array.isArray(res.data)) {
-        const catMap = new Map();
-        res.data.forEach((prod) => {
-          if (prod.category) {
-            if (typeof prod.category === "object") {
-              catMap.set(prod.category._id, prod.category);
-            } else {
-              catMap.set(prod.category, { _id: prod.category, name: prod.category });
-            }
-          }
-        });
-        setCategories(Array.from(catMap.values()));
+        setCategories(res.data);
       }
     } catch (err) {
       console.error("Fetch categories error:", err);
+      showFeedback("error", "Failed to fetch categories.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCategoriesFromProducts();
+    fetchCategories();
   }, []);
 
   const showFeedback = (type, message) => {
@@ -64,7 +56,7 @@ const CategoriesPage = () => {
         if (res.data) {
           setCategories((prev) => [...prev, res.data]);
         } else {
-          fetchCategoriesFromProducts();
+          fetchCategories();
         }
       }
     } catch (err) {
@@ -75,6 +67,23 @@ const CategoriesPage = () => {
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    try {
+      const res = await categoryService.deleteCategory(id);
+      if (res.success) {
+        showFeedback("success", "Category deleted successfully.");
+        fetchCategories();
+      }
+    } catch (err) {
+      console.error("Delete category error:", err);
+      showFeedback(
+        "error",
+        err.response?.data?.message || "Failed to delete category."
+      );
     }
   };
 
@@ -172,9 +181,13 @@ const CategoriesPage = () => {
                       <p className="text-[10px] text-gray-500 font-mono">ID: {cat._id}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-700">
-                    Active
-                  </span>
+                  <button
+                    onClick={() => handleDeleteCategory(cat._id)}
+                    className="p-1 rounded hover:bg-red-50 text-red-500 transition-colors"
+                    title="Delete Category"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>

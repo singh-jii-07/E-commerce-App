@@ -14,7 +14,7 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
   });
 }
 
-// Create order by Cash on Delivery (COD) or standard checkout
+
 const createOrder = async (req, res) => {
   try {
     const userId = req.userId;
@@ -94,7 +94,7 @@ const createOrder = async (req, res) => {
       orderStatus: "Pending",
     });
 
-    // Ensure User document exists in ecommerce DB and push order ID
+  
     let userDoc = await User.findOne({ authUserId: userId });
     if (!userDoc) {
       userDoc = await User.create({
@@ -104,14 +104,14 @@ const createOrder = async (req, res) => {
     userDoc.orders.push(order._id);
     await userDoc.save();
 
-    // Deduct stock for ordered products
+
     for (const cartItem of cartItems) {
       await Product.findByIdAndUpdate(cartItem.product._id, {
         $inc: { stock: -cartItem.quantity },
       });
     }
 
-    // Clear user cart
+  
     await Cart.deleteMany({ user: userId });
 
     return res.status(201).json({
@@ -142,7 +142,7 @@ const createOrderRazorpay = async (req, res) => {
       });
     }
 
-    // If paying for an existing order
+   
     if (orderId) {
       const existingOrder = await Order.findOne({ _id: orderId, user: userId });
       if (!existingOrder) {
@@ -170,7 +170,7 @@ const createOrderRazorpay = async (req, res) => {
       });
     }
 
-    // Creating a new order from cart with Razorpay
+  
     if (!address) {
       return res.status(400).json({
         success: false,
@@ -245,8 +245,7 @@ const createOrderRazorpay = async (req, res) => {
       orderStatus: "Pending",
     });
 
-    // Ensure User document exists in ecommerce DB and push order ID
-    // Ensure User document exists in ecommerce DB and push order ID
+   
     let userDoc = await User.findOne({ authUserId: userId });
     if (!userDoc) {
       userDoc = await User.create({
@@ -267,14 +266,14 @@ const createOrderRazorpay = async (req, res) => {
     order.razorpayOrderId = razorpayOrder.id;
     await order.save();
 
-    // Deduct stock for ordered products
+    
     for (const cartItem of cartItems) {
       await Product.findByIdAndUpdate(cartItem.product._id, {
         $inc: { stock: -cartItem.quantity },
       });
     }
 
-    // Clear user cart
+
     await Cart.deleteMany({ user: userId });
 
     return res.status(201).json({
@@ -308,17 +307,16 @@ const verifyRazorpay = async (req, res) => {
 
     let order = null;
 
-    // 1. Try finding by MongoDB _id (orderId)
+
     if (orderId && mongoose.Types.ObjectId.isValid(orderId)) {
       order = await Order.findById(orderId);
     }
 
-    // 2. Try finding by razorpayOrderId field
     if (!order && razorpay_order_id) {
       order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
     }
 
-    // 3. Fallback: try finding by razorpay_order_id as MongoDB _id
+ 
     if (!order && razorpay_order_id && mongoose.Types.ObjectId.isValid(razorpay_order_id)) {
       order = await Order.findById(razorpay_order_id);
     }
@@ -397,7 +395,7 @@ const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Admin can access any order, user can only access their own
+    
     const isUserAdmin = req.role && req.role.toLowerCase() === "admin";
     const filter = isUserAdmin ? { _id: id } : { _id: id, user: req.userId };
 
@@ -469,7 +467,7 @@ const cancelOrder = async (req, res) => {
     order.orderStatus = "Cancelled";
     await order.save();
 
-    // Restore stock for cancelled items
+   
     for (const item of order.items) {
       if (item.product) {
         await Product.findByIdAndUpdate(item.product, {
@@ -578,7 +576,7 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Restore stock if admin sets status to Cancelled
+    
     if (orderStatus === "Cancelled") {
       for (const item of order.items) {
         if (item.product) {
@@ -619,18 +617,18 @@ const downloadInvoice = async (req, res) => {
       return res.status(404).send("<h1>Order not found</h1>");
     }
 
-    // Only allow user to download if it belongs to them or if they are admin
+   
     if (order.user.toString() !== req.userId && req.role !== "admin") {
       return res.status(403).send("<h1>Access denied</h1>");
     }
 
-    // Ensure status is confirmed
+   
     const allowedStatuses = ["Confirmed", "Packed", "Shipped", "Delivered"];
     if (!allowedStatuses.includes(order.orderStatus)) {
       return res.status(400).send("<h1>Invoice is only available for confirmed orders</h1>");
     }
 
-    // Fetch user details from auth service
+    
     let customerEmail = "N/A";
     try {
       const token = req.query.token || req.headers.authorization?.split(" ")[1];
