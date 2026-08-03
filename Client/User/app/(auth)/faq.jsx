@@ -8,9 +8,8 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import faqService from "../../services/faqService";
 
 export default function FaqScreen() {
@@ -89,7 +88,7 @@ export default function FaqScreen() {
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>FAQs</Text>
-          <View style={{ width: 40 }} /> {/* spacer to align title */}
+          <View style={{ width: 40 }} />
         </View>
       </View>
 

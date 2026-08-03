@@ -89,7 +89,7 @@ const Profile = () => {
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
-          <View style={{ width: 40 }} /> {/* Spacer for centering */}
+          <View style={{ width: 40 }} />
         </View>
       </View>
 
