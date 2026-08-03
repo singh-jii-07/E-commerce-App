@@ -75,14 +75,8 @@ export const deleteCategory = async (req, res) => {
       });
     }
 
-    // Check if there are any products in this category
-    const productCount = await Product.countDocuments({ category: id });
-    if (productCount > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete category because it has associated products",
-      });
-    }
+    // Delete all products associated with this category
+    await Product.deleteMany({ category: id });
 
     await Category.findByIdAndDelete(id);
 

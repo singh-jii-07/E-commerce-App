@@ -71,7 +71,7 @@ const CategoriesPage = () => {
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    if (!window.confirm("Are you sure you want to delete this category? All associated products will be deleted automatically.")) return;
     try {
       const res = await categoryService.deleteCategory(id);
       if (res.success) {
