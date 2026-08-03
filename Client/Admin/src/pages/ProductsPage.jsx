@@ -126,14 +126,14 @@ const ProductsPage = () => {
         if (res.success) {
           showFeedback("success", "Product updated.");
           setEditingProduct(null);
-          fetchProducts();
+          fetchProductsAndCategories();
         }
       } else {
         const res = await productService.createProduct(payload);
         if (res.success) {
           showFeedback("success", "Product added.");
           setIsAddOpen(false);
-          fetchProducts();
+          fetchProductsAndCategories();
         }
       }
     } catch (err) {
@@ -152,7 +152,7 @@ const ProductsPage = () => {
       if (res.success) {
         showFeedback("success", "Product deleted.");
         setDeletingProduct(null);
-        fetchProducts();
+        fetchProductsAndCategories();
       }
     } catch (err) {
       console.error("Delete product error:", err);
