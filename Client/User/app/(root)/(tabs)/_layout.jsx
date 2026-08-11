@@ -16,7 +16,7 @@ export default function TabLayout() {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#E6EEF8",
+        backgroundColor: "#FFFFFF",
       }}
     >
       <Tabs
@@ -29,10 +29,8 @@ export default function TabLayout() {
           tabBarStyle: {
             position: "absolute",
             bottom: 0,
-
-            // Space from left and right edges
-            left: 16,
-            right: 16,
+            left: 0,
+            right: 0,
 
             backgroundColor: "#0F172A",
 
@@ -43,13 +41,9 @@ export default function TabLayout() {
 
             borderTopWidth: 0,
 
-            // TOP CURVES
+            // TOP CURVES ONLY (to match image)
             borderTopLeftRadius: 30,
             borderTopRightRadius: 30,
-
-            // BOTTOM CURVES
-            borderBottomLeftRadius: 30,
-            borderBottomRightRadius: 30,
 
             overflow: "hidden",
 
@@ -65,7 +59,7 @@ export default function TabLayout() {
         }}
 
         sceneContainerStyle={{
-          backgroundColor: "#E6EEF8",
+          backgroundColor: "#FFFFFF",
 
           // Keep content above the tab bar
           marginBottom: tabBarHeight,
