@@ -13,7 +13,7 @@ import {
   Modal,
   TextInput,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import cartService from "../../../services/cartService";
@@ -21,9 +21,31 @@ import orderService from "../../../services/orderService";
 import addressService from "../../../services/addressService";
 import { useCart } from "../../../context/CartContext";
 
+const getCalories = (item) => {
+  const name = (item.name || "").toLowerCase().trim();
+  if (name.includes("apple")) return "55 cal";
+  if (name.includes("orange")) return "75 cal";
+  if (name.includes("capsicum")) return "52 cal";
+  if (name.includes("dragon")) return "69 cal";
+  if (name.includes("strawberry")) return "75 cal";
+  if (name.includes("lemon")) return "20 cal";
+  if (name.includes("potato")) return "87 cal";
+  if (name.includes("onion")) return "40 cal";
+  if (name.includes("fries")) return "312 cal";
+
+  // Fallback deterministic calculation based on product name hash
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const cal = Math.abs(hash % 40) + 45;
+  return `${cal} cal`;
+};
+
 const MyCart = () => {
   const router = useRouter();
   const { fetchCartCount } = useCart();
+  const insets = useSafeAreaInsets();
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,11 +157,11 @@ const MyCart = () => {
               {prod.name || "Product"}
             </Text>
             <Text style={styles.productSubText}>
-              {prod.stock ? `Stock: ${prod.stock}` : "75 cal"}
+              {getCalories(prod)}
             </Text>
             <Text style={styles.productPrice}>
               ₹{prod.price || 0}
-              {prod.unit ? <Text style={styles.unitText}>/{prod.unit}</Text> : null}
+              {prod.unit ? <Text style={styles.unitText}>/{prod.unit.toLowerCase()}</Text> : null}
             </Text>
           </View>
 
@@ -199,7 +221,7 @@ const MyCart = () => {
             onPress={() => router.push("/product")}
             activeOpacity={0.8}
           >
-            <Ionicons name="search-outline" size={22} color="#0F172A" />
+            <Ionicons name="search-outline" size={24} color="#0F172A" />
           </TouchableOpacity>
         </View>
 
@@ -214,7 +236,7 @@ const MyCart = () => {
             <Ionicons name="basket-outline" size={60} color="#CBD5E1" />
             <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
             <Text style={styles.emptySubtitle}>
-              Looks like you haven't added anything to your cart yet.
+              {`Looks like you haven't added anything to your cart yet.`}
             </Text>
             <TouchableOpacity
               style={styles.shopNowBtn}
@@ -233,32 +255,40 @@ const MyCart = () => {
             showsVerticalScrollIndicator={false}
           />
         )}
-
-        {/* Bottom Total & Checkout Bar (Image 1 & 2 UI design) */}
-        {cartItems.length > 0 && (
-          <View style={styles.bottomCheckoutCard}>
-            <Text style={styles.totalAmountText}>
-              Total amount ₹{calculateTotal().toFixed(2)}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.checkoutBtn,
-                checkoutLoading && { opacity: 0.7 },
-              ]}
-              onPress={handleCheckout}
-              disabled={checkoutLoading}
-              activeOpacity={0.85}
-            >
-              {checkoutLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.checkoutBtnText}>Checkout</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
+
+      {/* Bottom Total & Checkout Bar (Image 1 & 2 UI design) */}
+      {cartItems.length > 0 && (
+        <View
+          style={[
+            styles.bottomCheckoutCard,
+            { bottom: 70 + insets.bottom },
+          ]}
+        >
+          <View style={styles.priceContainer}>
+            <Text style={styles.totalLabel}>Total Price</Text>
+            <Text style={styles.totalAmountText}>
+              ₹{calculateTotal().toFixed(2)}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.checkoutBtn,
+              checkoutLoading && { opacity: 0.7 },
+            ]}
+            onPress={handleCheckout}
+            disabled={checkoutLoading}
+            activeOpacity={0.85}
+          >
+            {checkoutLoading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.checkoutBtnText}>Checkout</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -269,12 +299,11 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingTop: 15,
   },
   header: {
     flexDirection: "row",
@@ -283,31 +312,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "400",
+    fontSize: 32,
+    fontWeight: "bold",
     color: "#0F172A",
-    lineHeight: 32,
+    lineHeight: 36,
   },
   headerTitleBold: {
-    fontSize: 28,
-    fontWeight: "800",
+    fontSize: 32,
+    fontWeight: "bold",
     color: "#0F172A",
-    lineHeight: 32,
+    lineHeight: 36,
   },
   searchIconBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#F1F5F9",
-    elevation: 2,
+    elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
   loadingContainer: {
     flex: 1,
@@ -322,7 +351,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: "800",
+    fontWeight: "bold",
     color: "#0F172A",
     marginTop: 14,
   },
@@ -343,23 +372,25 @@ const styles = StyleSheet.create({
   shopNowText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "bold",
   },
   listContent: {
-    paddingBottom: 150,
+    paddingBottom: 160,
   },
   cardWrapper: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
-    borderRadius: 24,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    backgroundColor: "#F5F7FA",
+    borderRadius: 28,
+    paddingVertical: 16,
+    paddingLeft: 16,
+    paddingRight: 76,
+    borderWidth: 0,
     overflow: "hidden",
+    position: "relative",
   },
   productImage: {
     width: 70,
@@ -367,93 +398,116 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     flex: 1,
-    marginLeft: 14,
+    marginLeft: 16,
   },
   productName: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#0F172A",
   },
   productSubText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#94A3B8",
-    marginVertical: 3,
+    marginVertical: 4,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "800",
     color: "#FF6B35",
   },
   unitText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#94A3B8",
-    fontWeight: "400",
+    fontWeight: "normal",
   },
   quantityCol: {
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
   },
   qtyActionBtn: {
-    padding: 4,
+    padding: 6,
   },
   qtyBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     backgroundColor: "#0F172A",
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 2,
+    marginVertical: 4,
   },
   qtyBadgeText: {
     color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "bold",
   },
   deleteSideBtn: {
     backgroundColor: "#FF6B35",
-    padding: 12,
-    borderRadius: 16,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    height: "100%",
+    width: 60,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 4,
+    borderTopRightRadius: 28,
+    borderBottomRightRadius: 28,
   },
   bottomCheckoutCard: {
     position: "absolute",
-    bottom: 80,
-    left: 18,
-    right: 18,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 28,
-    padding: 18,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    justifyContent: "space-between",
+    borderTopWidth: 1,
     borderColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 8,
+  },
+  priceContainer: {
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  totalLabel: {
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   totalAmountText: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
     color: "#0F172A",
-    marginBottom: 12,
+    marginTop: 2,
   },
   checkoutBtn: {
-    width: "100%",
     backgroundColor: "#0F172A",
-    borderRadius: 30,
-    paddingVertical: 16,
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 140,
+    elevation: 2,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   checkoutBtnText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "800",
+    fontWeight: "bold",
   },
   modalOverlay: {
     flex: 1,
