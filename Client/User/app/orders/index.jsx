@@ -69,13 +69,13 @@ const OrdersList = () => {
         ? product.images[0]
         : "https://via.placeholder.com/150";
 
-    const formattedDate = item.createdAt
+    const formattedDate = (item.createdAt
       ? new Date(item.createdAt).toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
           year: "numeric",
         })
-      : "20 Sep 2023";
+      : "20 Sep 2023").toLowerCase();
 
     // Format display status (e.g. "Processing" for Confirmed/Packed/Shipped)
     let displayStatus = item.orderStatus || "Pending";
@@ -104,7 +104,7 @@ const OrdersList = () => {
 
           <Text style={styles.priceText}>
             ₹{(item.totalAmount || product.price || 0).toFixed(2)}
-            {product.unit ? <Text style={styles.unitText}>/{product.unit}</Text> : null}
+            {product.unit ? <Text style={styles.unitText}>/{product.unit.toLowerCase()}</Text> : null}
           </Text>
         </View>
 
@@ -130,12 +130,12 @@ const OrdersList = () => {
             onPress={() => router.push("/product")}
             activeOpacity={0.8}
           >
-            <Ionicons name="search-outline" size={22} color="#0F172A" />
+            <Ionicons name="search-outline" size={24} color="#0F172A" />
           </TouchableOpacity>
         </View>
 
         {/* Horizontal Status Filters (Image Mockup UI) */}
-        <View style={{ height: 48, marginVertical: 12 }}>
+        <View style={{ height: 55, marginVertical: 12 }}>
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -178,7 +178,7 @@ const OrdersList = () => {
             <Ionicons name="receipt-outline" size={54} color="#CBD5E1" />
             <Text style={styles.emptyTitle}>No Orders Found</Text>
             <Text style={styles.emptySubtitle}>
-              There are no orders matching "{selectedFilter}".
+              {`There are no orders matching "${selectedFilter}".`}
             </Text>
           </View>
         ) : (
@@ -205,41 +205,41 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingTop: 15,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "400",
+    fontSize: 32,
+    fontWeight: "bold",
     color: "#0F172A",
-    lineHeight: 32,
+    lineHeight: 36,
   },
   headerTitleBold: {
-    fontSize: 28,
-    fontWeight: "800",
+    fontSize: 32,
+    fontWeight: "bold",
     color: "#0F172A",
-    lineHeight: 32,
+    lineHeight: 36,
   },
   searchIconBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#F1F5F9",
-    elevation: 2,
+    elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
   filterListContainer: {
     paddingRight: 10,
@@ -247,21 +247,27 @@ const styles = StyleSheet.create({
   },
   filterBtn: {
     paddingHorizontal: 22,
-    paddingVertical: 10,
-    backgroundColor: "#F1F5F9",
-    borderRadius: 24,
+    paddingVertical: 12,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 25,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
   },
   filterBtnActive: {
     backgroundColor: "#0F172A",
+    borderColor: "#0F172A",
   },
   filterText: {
-    color: "#0F172A",
+    color: "#475569",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 15,
   },
   filterTextActive: {
     color: "#FFFFFF",
+    fontWeight: "700",
   },
   loadingContainer: {
     flex: 1,
@@ -293,43 +299,42 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
-    borderRadius: 22,
+    backgroundColor: "#F5F7FA",
+    borderRadius: 28,
     padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    marginBottom: 16,
+    borderWidth: 0,
   },
   productImage: {
-    width: 65,
-    height: 65,
+    width: 70,
+    height: 70,
   },
   cardContent: {
     flex: 1,
-    marginLeft: 14,
+    marginLeft: 16,
   },
   productTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#0F172A",
   },
   orderDate: {
     fontSize: 13,
     color: "#94A3B8",
-    marginVertical: 3,
+    marginVertical: 4,
   },
   priceText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "800",
     color: "#FF6B35",
   },
   unitText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#94A3B8",
-    fontWeight: "400",
+    fontWeight: "normal",
   },
   statusPill: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#EBEFF5",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -337,6 +342,6 @@ const styles = StyleSheet.create({
   statusPillText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#0F172A",
+    color: "#475569",
   },
 });

@@ -162,7 +162,7 @@ const ProductDetails = () => {
               onPress={() => router.back()}
               activeOpacity={0.8}
             >
-              <Ionicons name="arrow-back" size={22} color="#0F172A" />
+              <Ionicons name="arrow-back" size={24} color="#0F172A" />
             </TouchableOpacity>
 
             <Image
@@ -184,9 +184,7 @@ const ProductDetails = () => {
               <View style={{ flex: 1, paddingRight: 10 }}>
                 <Text style={styles.productTitle}>{product.name}</Text>
                 <Text style={styles.stockText}>
-                  {product.stock > 0
-                    ? `Available in stock (${product.stock} ${product.unit || ''})`
-                    : "Out of stock"}
+                  {product.stock > 0 ? "Available in stock" : "Out of stock"}
                 </Text>
               </View>
 
@@ -201,7 +199,7 @@ const ProductDetails = () => {
                 </TouchableOpacity>
 
                 <Text style={styles.qtyText}>
-                  {quantity} {product.unit || ''}
+                  {quantity} {(product.unit || '').toLowerCase()}
                 </Text>
 
                 <TouchableOpacity
@@ -303,7 +301,7 @@ const ProductDetails = () => {
                       </Text>
                       <Text style={styles.similarPrice}>
                         ₹{item.price}
-                        {item.unit ? `/${item.unit}` : ''}
+                        {item.unit ? `/${item.unit.toLowerCase()}` : ''}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -319,7 +317,7 @@ const ProductDetails = () => {
             <Text style={styles.bottomPriceText}>
               ₹{(product.price * quantity).toFixed(2)}
               {product.unit ? (
-                <Text style={styles.bottomUnitText}>/{product.unit}</Text>
+                <Text style={styles.bottomUnitText}>/{product.unit.toLowerCase()}</Text>
               ) : null}
             </Text>
           </View>
@@ -352,12 +350,12 @@ export default ProductDetails;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
   },
   loadingContainer: {
     flex: 1,
@@ -373,22 +371,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   scrollContent: {
-    paddingBottom: 110,
+    paddingBottom: 120,
   },
   imageHeaderCard: {
-    backgroundColor: "#FFFFFF",
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    backgroundColor: "#F8FAFC",
+    borderBottomLeftRadius: 180,
+    borderBottomRightRadius: 180,
     paddingTop: 16,
-    paddingBottom: 30,
+    paddingBottom: 40,
     paddingHorizontal: 20,
     alignItems: "center",
     position: "relative",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    overflow: "hidden",
   },
   backButtonCircle: {
     position: "absolute",
@@ -397,70 +391,75 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
   productMainImage: {
-    width: "100%",
-    height: 230,
+    width: "90%",
+    height: 210,
     marginTop: 20,
+    borderRadius: 20,
   },
   bodySection: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 24,
   },
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
+    marginBottom: 8,
   },
   productTitle: {
-    fontSize: 24,
-    fontWeight: "800",
+    fontSize: 28,
+    fontWeight: "bold",
     color: "#0F172A",
     marginBottom: 4,
   },
   stockText: {
-    fontSize: 13,
-    color: "#10B981",
-    fontWeight: "600",
+    fontSize: 14,
+    color: "#94A3B8",
+    fontWeight: "500",
   },
   quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 25,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
   },
   qtyBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: "#0F172A",
     justifyContent: "center",
     alignItems: "center",
   },
   qtyText: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "bold",
     color: "#0F172A",
-    marginHorizontal: 10,
+    marginHorizontal: 12,
   },
   sectionMargin: {
-    marginTop: 24,
+    marginTop: 28,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "bold",
     color: "#0F172A",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   descriptionText: {
-    fontSize: 14,
-    color: "#64748B",
+    fontSize: 15,
+    color: "#94A3B8",
     lineHeight: 22,
   },
   noReviewsText: {
@@ -469,21 +468,24 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   reviewCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    backgroundColor: "transparent",
+    borderRadius: 0,
+    padding: 0,
+    marginBottom: 16,
+    borderWidth: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#F1F5F9",
+    paddingBottom: 16,
   },
   reviewerHeader: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 8,
   },
   avatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#E2E8F0",
     justifyContent: "center",
     alignItems: "center",
@@ -494,48 +496,47 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   reviewerName: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "bold",
     color: "#0F172A",
     marginBottom: 2,
   },
   reviewDate: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#94A3B8",
   },
   reviewComment: {
     marginTop: 8,
-    fontSize: 13,
-    color: "#475569",
-    lineHeight: 18,
+    fontSize: 14,
+    color: "#94A3B8",
+    lineHeight: 20,
   },
   similarList: {
     paddingRight: 10,
   },
   similarCard: {
-    width: 130,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 10,
+    width: 140,
+    backgroundColor: "#F5F7FA",
+    borderRadius: 20,
+    padding: 12,
     marginRight: 12,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderWidth: 0,
   },
   similarImage: {
     width: "100%",
     height: 80,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   similarName: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "bold",
     color: "#0F172A",
   },
   similarPrice: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "800",
     color: "#FF6B35",
-    marginTop: 2,
+    marginTop: 4,
   },
   bottomBar: {
     position: "absolute",
@@ -543,38 +544,38 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: "#0F172A",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingVertical: 18,
+    paddingVertical: 20,
   },
   bottomPriceContainer: {
     justifyContent: "center",
   },
   bottomPriceText: {
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 24,
+    fontWeight: "bold",
     color: "#FFFFFF",
   },
   bottomUnitText: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#94A3B8",
-    fontWeight: "400",
+    fontWeight: "normal",
   },
   addToCartPillBtn: {
     backgroundColor: "#FFFFFF",
     borderRadius: 30,
-    paddingHorizontal: 28,
+    paddingHorizontal: 32,
     paddingVertical: 14,
     justifyContent: "center",
     alignItems: "center",
   },
   addToCartPillText: {
     color: "#0F172A",
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
