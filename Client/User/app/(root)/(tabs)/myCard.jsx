@@ -141,55 +141,58 @@ const MyCart = () => {
     return (
       <View style={styles.cardWrapper}>
         <View style={styles.card}>
-          <Image
-            source={{
-              uri:
-                prod.images && prod.images.length > 0
-                  ? prod.images[0]
-                  : "https://via.placeholder.com/150",
-            }}
-            style={styles.productImage}
-            resizeMode="contain"
-          />
+          
+          <View style={styles.cardContent}>
+            <Image
+              source={{
+                uri:
+                  prod.images && prod.images.length > 0
+                    ? prod.images[0]
+                    : "https://via.placeholder.com/150",
+              }}
+              style={styles.productImage}
+              resizeMode="contain"
+            />
 
-          <View style={styles.detailsContainer}>
-            <Text numberOfLines={1} style={styles.productName}>
-              {prod.name || "Product"}
-            </Text>
-            <Text style={styles.productSubText}>
-              {getCalories(prod)}
-            </Text>
-            <Text style={styles.productPrice}>
-              ₹{prod.price || 0}
-              {prod.unit ? <Text style={styles.unitText}>/{prod.unit.toLowerCase()}</Text> : null}
-            </Text>
-          </View>
-
-          {/* Right Quantity Control Vertical Stack */}
-          <View style={styles.quantityCol}>
-            <TouchableOpacity
-              style={styles.qtyActionBtn}
-              onPress={() => handleUpdateQuantity(item, 1)}
-              disabled={isItemUpdating}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="add" size={16} color="#0F172A" />
-            </TouchableOpacity>
-
-            <View style={styles.qtyBadge}>
-              <Text style={styles.qtyBadgeText}>
-                {item.quantity < 10 ? `0${item.quantity}` : item.quantity}
+            <View style={styles.detailsContainer}>
+              <Text numberOfLines={1} style={styles.productName}>
+                {prod.name || "Product"}
+              </Text>
+              <Text style={styles.productSubText}>
+                {getCalories(prod)}
+              </Text>
+              <Text style={styles.productPrice}>
+                ₹{prod.price || 0}
+                {prod.unit ? <Text style={styles.unitText}>/{prod.unit.toLowerCase()}</Text> : null}
               </Text>
             </View>
 
-            <TouchableOpacity
-              style={styles.qtyActionBtn}
-              onPress={() => handleUpdateQuantity(item, -1)}
-              disabled={isItemUpdating}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="remove" size={16} color="#0F172A" />
-            </TouchableOpacity>
+            {/* Right Quantity Control Vertical Stack */}
+            <View style={styles.quantityCol}>
+              <TouchableOpacity
+                style={styles.qtyActionBtn}
+                onPress={() => handleUpdateQuantity(item, 1)}
+                disabled={isItemUpdating}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={16} color="#0F172A" />
+              </TouchableOpacity>
+
+              <View style={styles.qtyBadge}>
+                <Text style={styles.qtyBadgeText}>
+                  {item.quantity < 10 ? `0${item.quantity}` : item.quantity}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.qtyActionBtn}
+                onPress={() => handleUpdateQuantity(item, -1)}
+                disabled={isItemUpdating}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="remove" size={16} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Delete Action Button (Image 1 & 2 UI) */}
@@ -382,15 +385,19 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#F5F7FA",
     borderRadius: 28,
-    paddingVertical: 16,
-    paddingLeft: 16,
-    paddingRight: 76,
     borderWidth: 0,
     overflow: "hidden",
     position: "relative",
+  },
+  cardContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingLeft: 16,
+    paddingRight: 76,
   },
   productImage: {
     width: 70,
@@ -446,7 +453,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 0,
-    height: "100%",
+    bottom: 0,
     width: 60,
     justifyContent: "center",
     alignItems: "center",
