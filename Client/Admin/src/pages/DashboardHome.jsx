@@ -244,8 +244,14 @@ const DashboardHome = () => {
                       <p className="text-[11px] text-gray-500">₹{p.price} / {p.unit}</p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold shrink-0">
-                    {p.stock} left
+                  <span
+                    className={`px-2 py-0.5 rounded border text-[11px] font-bold shrink-0 ${
+                      p.stock === 0
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    {p.stock === 0 ? "Out of stock" : `${p.stock} left`}
                   </span>
                 </div>
               ))}

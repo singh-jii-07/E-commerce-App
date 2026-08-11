@@ -298,12 +298,14 @@ const ProductsPage = () => {
                       <td className="px-4 py-3">
                         <span
                           className={`font-medium px-2 py-0.5 rounded border ${
-                            prod.stock <= 5
+                            prod.stock === 0
+                              ? "bg-red-100 text-red-800 border-red-200"
+                              : prod.stock <= 5
                               ? "bg-red-50 text-red-700 border-red-200"
                               : "bg-gray-100 text-gray-700 border-gray-200"
                           }`}
                         >
-                          {prod.stock} left
+                          {prod.stock === 0 ? "Out of stock" : `${prod.stock} left`}
                         </span>
                       </td>
                       <td className="px-4 py-3">

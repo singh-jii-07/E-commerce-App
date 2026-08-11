@@ -8,6 +8,8 @@ import {
   Loader2,
   X,
   FileText,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 const FaqsPage = () => {
@@ -17,6 +19,7 @@ const FaqsPage = () => {
   const [answer, setAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [editingFaqId, setEditingFaqId] = useState(null);
 
   const fetchFaqs = async () => {
     setLoading(true);
@@ -48,28 +51,79 @@ const FaqsPage = () => {
 
     setSubmitting(true);
     try {
-      const res = await faqService.createFaq({
-        question: question.trim(),
-        answer: answer.trim(),
-      });
-      if (res.success) {
-        showFeedback("success", "FAQ added successfully.");
-        setQuestion("");
-        setAnswer("");
-        if (res.data) {
-          setFaqs((prev) => [res.data, ...prev]);
-        } else {
-          fetchFaqs();
+      if (editingFaqId) {
+        // Update mode
+        const res = await faqService.updateFaq(editingFaqId, {
+          question: question.trim(),
+          answer: answer.trim(),
+        });
+        if (res.success) {
+          showFeedback("success", "FAQ updated successfully.");
+          setQuestion("");
+          setAnswer("");
+          setEditingFaqId(null);
+          setFaqs((prev) =>
+            prev.map((item) => (item._id === editingFaqId ? res.data : item))
+          );
+        }
+      } else {
+        // Create mode
+        const res = await faqService.createFaq({
+          question: question.trim(),
+          answer: answer.trim(),
+        });
+        if (res.success) {
+          showFeedback("success", "FAQ added successfully.");
+          setQuestion("");
+          setAnswer("");
+          if (res.data) {
+            setFaqs((prev) => [res.data, ...prev]);
+          } else {
+            fetchFaqs();
+          }
         }
       }
     } catch (err) {
-      console.error("Add FAQ error:", err);
+      console.error("Save FAQ error:", err);
       showFeedback(
         "error",
-        err.response?.data?.message || "Failed to create FAQ."
+        err.response?.data?.message || `Failed to ${editingFaqId ? "update" : "create"} FAQ.`
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleEditClick = (faq) => {
+    setEditingFaqId(faq._id);
+    setQuestion(faq.question);
+    setAnswer(faq.answer);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingFaqId(null);
+    setQuestion("");
+    setAnswer("");
+  };
+
+  const handleDeleteFaq = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this FAQ?")) return;
+
+    try {
+      const res = await faqService.deleteFaq(id);
+      if (res.success) {
+        showFeedback("success", "FAQ deleted successfully.");
+        setFaqs((prev) => prev.filter((item) => item._id !== id));
+        if (editingFaqId === id) {
+          handleCancelEdit();
+        }
+      }
+    } catch (err) {
+      console.error("Delete FAQ error:", err);
+      showFeedback(
+        "error",
+        err.response?.data?.message || "Failed to delete FAQ."
+      );
     }
   };
 
@@ -105,10 +159,18 @@ const FaqsPage = () => {
 
       {/* Form & List Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Add FAQ Form */}
+        {/* Add/Edit FAQ Form */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4 h-fit">
           <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-            <Plus className="w-4 h-4 text-indigo-600" /> Add FAQ
+            {editingFaqId ? (
+              <>
+                <Edit className="w-4 h-4 text-indigo-600" /> Edit FAQ
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 text-indigo-600" /> Add FAQ
+              </>
+            )}
           </h3>
 
           <form onSubmit={handleAddFaq} className="space-y-4">
@@ -140,14 +202,33 @@ const FaqsPage = () => {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
-            >
-              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-              <span>Save FAQ</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                {submitting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : editingFaqId ? (
+                  <Edit className="w-3.5 h-3.5" />
+                ) : (
+                  <Plus className="w-3.5 h-3.5" />
+                )}
+                <span>{editingFaqId ? "Update FAQ" : "Save FAQ"}</span>
+              </button>
+
+              {editingFaqId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>Cancel</span>
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -169,7 +250,11 @@ const FaqsPage = () => {
               {faqs.map((faq) => (
                 <div
                   key={faq._id}
-                  className="p-4 rounded-lg bg-gray-50 border border-gray-200 space-y-2"
+                  className={`p-4 rounded-lg border space-y-2 transition-colors ${
+                    editingFaqId === faq._id
+                      ? "bg-indigo-50/30 border-indigo-300 shadow-sm"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
                 >
                   <div className="flex items-start gap-2.5">
                     <div className="w-7 h-7 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
@@ -179,9 +264,25 @@ const FaqsPage = () => {
                       <p className="font-bold text-gray-900 text-xs">{faq.question}</p>
                       <p className="text-[10px] text-gray-500 font-mono mt-0.5">ID: {faq._id}</p>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">
-                      Active
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleEditClick(faq)}
+                        title="Edit FAQ"
+                        className="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFaq(faq._id)}
+                        title="Delete FAQ"
+                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium ml-1">
+                        Active
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-start gap-2.5 pt-2 border-t border-gray-200">
                     <div className="w-7 h-7 rounded bg-gray-200 text-gray-700 border border-gray-300 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">

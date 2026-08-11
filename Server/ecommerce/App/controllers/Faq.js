@@ -61,9 +61,73 @@ const getFaqs = async (req, res) => {
   }
 };
 
+// =============================
+// Update FAQ (Admin)
+// =============================
+const updateFaq = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { question, answer, isActive } = req.body;
 
+    const faq = await Faq.findById(id);
+    if (!faq) {
+      return res.status(404).json({
+        success: false,
+        message: "FAQ not found.",
+      });
+    }
+
+    if (question !== undefined) faq.question = question;
+    if (answer !== undefined) faq.answer = answer;
+    if (isActive !== undefined) faq.isActive = isActive;
+
+    await faq.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "FAQ updated successfully.",
+      data: faq,
+    });
+  } catch (error) {
+    console.error("UPDATE FAQ ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
+// =============================
+// Delete FAQ (Admin)
+// =============================
+const deleteFaq = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const faq = await Faq.findByIdAndDelete(id);
+    if (!faq) {
+      return res.status(404).json({
+        success: false,
+        message: "FAQ not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "FAQ deleted successfully.",
+    });
+  } catch (error) {
+    console.error("DELETE FAQ ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
 
 export {
   createFaq,
-  getFaqs
+  getFaqs,
+  updateFaq,
+  deleteFaq
 };

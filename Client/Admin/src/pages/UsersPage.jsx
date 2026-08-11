@@ -44,15 +44,16 @@ const UsersPage = () => {
 
   const filteredUsers = users.filter(
     (u) =>
-      u.username?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase())
+      u.role === "user" &&
+      (u.username?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email?.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Users</h2>
-        <p className="text-xs text-gray-500">Registered user and administrator accounts</p>
+        <p className="text-xs text-gray-500">Manage registered customer accounts and their status</p>
       </div>
 
       {/* Error Alert */}
@@ -96,7 +97,7 @@ const UsersPage = () => {
                 <tr>
                   <th className="px-4 py-3">User</th>
                   <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Registered Date</th>
                   <th className="px-4 py-3 text-right">View</th>
                 </tr>
@@ -107,13 +108,13 @@ const UsersPage = () => {
                     <td className="px-4 py-3 font-semibold text-gray-900">{u.username}</td>
                     <td className="px-4 py-3">{u.email}</td>
                     <td className="px-4 py-3">
-                      {u.role === "admin" ? (
-                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 inline-flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> Admin
+                      {u.isLoggedIn ? (
+                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-green-100 text-green-700 border border-green-200 inline-flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Active
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700 border border-gray-200 inline-flex items-center gap-1">
-                          <User className="w-3 h-3" /> Customer
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400" /> Not active
                         </span>
                       )}
                     </td>
@@ -150,7 +151,7 @@ const UsersPage = () => {
             <div className="space-y-2 text-xs">
               <p><span className="font-semibold text-gray-700">Username:</span> {selectedUser.username}</p>
               <p><span className="font-semibold text-gray-700">Email:</span> {selectedUser.email}</p>
-              <p><span className="font-semibold text-gray-700">Role:</span> {selectedUser.role}</p>
+              <p><span className="font-semibold text-gray-700">Status:</span> {selectedUser.isLoggedIn ? "Active" : "Not active"}</p>
               <p><span className="font-semibold text-gray-700">User ID:</span> <code className="bg-gray-100 px-1 py-0.5 rounded">{selectedUser._id}</code></p>
               <p><span className="font-semibold text-gray-700">Created:</span> {new Date(selectedUser.createdAt).toLocaleString()}</p>
             </div>
