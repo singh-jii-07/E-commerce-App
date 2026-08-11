@@ -588,6 +588,11 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
+    if (orderStatus === "Delivered" && order.paymentMethod === "COD") {
+      order.paymentStatus = "Paid";
+      order.paidAt = new Date();
+    }
+
     order.orderStatus = orderStatus;
     await order.save();
 

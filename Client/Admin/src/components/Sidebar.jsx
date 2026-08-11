@@ -1,5 +1,5 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard,
@@ -11,11 +11,32 @@ import {
   Store,
   HelpCircle,
   Mail,
+  ChevronDown,
+  ChevronRight,
+  CreditCard,
+  History,
+  FileText,
+  Percent,
 } from "lucide-react";
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isOrdersActive =
+    location.pathname === "/orders" ||
+    location.pathname === "/payments" ||
+    location.pathname === "/transactions" ||
+    location.pathname === "/invoices";
+
+  const [ordersOpen, setOrdersOpen] = useState(isOrdersActive);
+
+  useEffect(() => {
+    if (isOrdersActive) {
+      setOrdersOpen(true);
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -26,10 +47,16 @@ const Sidebar = () => {
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: Package },
     { name: "Categories", path: "/categories", icon: Tags },
-    { name: "Orders", path: "/orders", icon: ShoppingBag },
     { name: "Users", path: "/users", icon: Users },
     { name: "FAQs", path: "/faqs", icon: HelpCircle },
     { name: "Contact Messages", path: "/contacts", icon: Mail },
+  ];
+
+  const ordersSubItems = [
+    { name: "All Orders", path: "/orders", icon: ShoppingBag },
+    { name: "Payments", path: "/payments", icon: CreditCard },
+    { name: "Transactions", path: "/transactions", icon: History },
+    { name: "Invoices", path: "/invoices", icon: FileText },
   ];
 
   return (
@@ -46,8 +73,77 @@ const Sidebar = () => {
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {/* Top items: Dashboard, Products, Categories */}
+        {navItems.slice(0, 3).map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800"
+                }`
+              }
+            >
+              <Icon className="w-4 h-4" />
+              <span>{item.name}</span>
+            </NavLink>
+          );
+        })}
+
+        {/* Orders Accordion */}
+        <div>
+          <button
+            onClick={() => setOrdersOpen((prev) => !prev)}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isOrdersActive
+                ? "text-white bg-gray-800"
+                : "text-gray-400 hover:text-white hover:bg-gray-800"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="w-4 h-4" />
+              <span>Orders</span>
+            </div>
+            {ordersOpen ? (
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+            )}
+          </button>
+
+          {/* Submenu Items */}
+          {ordersOpen && (
+            <div className="mt-1 ml-4 pl-3 border-l border-gray-800 space-y-1">
+              {ordersSubItems.map((subItem) => {
+                const SubIcon = subItem.icon;
+                return (
+                  <NavLink
+                    key={subItem.path}
+                    to={subItem.path}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        isActive
+                          ? "text-white bg-indigo-600 shadow-sm"
+                          : "text-gray-400 hover:text-white hover:bg-gray-800"
+                      }`
+                    }
+                  >
+                    <SubIcon className="w-3.5 h-3.5" />
+                    <span>{subItem.name}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom items: Users, FAQs, Contacts */}
+        {navItems.slice(3).map((item) => {
           const Icon = item.icon;
           return (
             <NavLink
