@@ -9,96 +9,142 @@ import { useCart } from "../../../context/CartContext";
 export default function TabLayout() {
   const { cartCount } = useCart();
   const insets = useSafeAreaInsets();
+
   const tabBarHeight = 70 + insets.bottom;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#E6EEF8" }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#E6EEF8",
+      }}
+    >
       <Tabs
         screenOptions={{
           headerShown: false,
+
           tabBarActiveTintColor: "#FFFFFF",
           tabBarInactiveTintColor: "#94A3B8",
+
           tabBarStyle: {
             position: "absolute",
             bottom: 0,
-            left: 0,
-            right: 0,
+
+            // Space from left and right edges
+            left: 16,
+            right: 16,
+
             backgroundColor: "#0F172A",
+
             height: tabBarHeight,
+
             paddingBottom: 10 + insets.bottom,
             paddingTop: 10,
+
             borderTopWidth: 0,
+
+            // TOP CURVES
             borderTopLeftRadius: 30,
             borderTopRightRadius: 30,
+
+            // BOTTOM CURVES
             borderBottomLeftRadius: 30,
             borderBottomRightRadius: 30,
+
             overflow: "hidden",
+
             elevation: 0,
             shadowOpacity: 0,
           },
+
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: "500",
             marginTop: 4,
           },
         }}
+
         sceneContainerStyle={{
           backgroundColor: "#E6EEF8",
-          borderBottomLeftRadius: 30,
-          borderBottomRightRadius: 30,
-          overflow: "hidden",
+
+          // Keep content above the tab bar
           marginBottom: tabBarHeight,
+
+          overflow: "hidden",
         }}
       >
-      {/* Home */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={24} color={color} />
-          ),
-        }}
-      />
+        {/* Home */}
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
 
-      {/* Order */}
-      <Tabs.Screen
-        name="order"
-        options={{
-          title: "Order",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="storefront-outline" size={26} color={color} />
-          ),
-        }}
-      />
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="home"
+                size={24}
+                color={color}
+              />
+            ),
+          }}
+        />
 
-      {/* My Cart */}
-      <Tabs.Screen
-        name="myCard"
-        options={{
-          title: "My Cart",
-          tabBarBadge: cartCount > 0 ? cartCount : undefined,
-          tabBarBadgeStyle: {
-            backgroundColor: "#FF6B35",
-            color: "#FFFFFF",
-          },
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="basket-outline" size={28} color={color} />
-          ),
-        }}
-      />
+        {/* Order */}
+        <Tabs.Screen
+          name="order"
+          options={{
+            title: "Order",
 
-      {/* More */}
-      <Tabs.Screen
-        name="More"
-        options={{
-          title: "More",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" size={24} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="storefront-outline"
+                size={26}
+                color={color}
+              />
+            ),
+          }}
+        />
+
+        {/* My Cart */}
+        <Tabs.Screen
+          name="myCard"
+          options={{
+            title: "My Cart",
+
+            tabBarBadge:
+              cartCount > 0 ? cartCount : undefined,
+
+            tabBarBadgeStyle: {
+              backgroundColor: "#FF6B35",
+              color: "#FFFFFF",
+            },
+
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="basket-outline"
+                size={28}
+                color={color}
+              />
+            ),
+          }}
+        />
+
+        {/* More */}
+        <Tabs.Screen
+          name="More"
+          options={{
+            title: "More",
+
+            tabBarIcon: ({ color, size }) => (
+              <Feather
+                name="grid"
+                size={24}
+                color={color}
+              />
+            ),
+          }}
+        />
+      </Tabs>
     </View>
   );
 }
