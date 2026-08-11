@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   bottomCheckoutCard: {
     position: "absolute",
-    bottom: 10,
+    bottom: 80,
     left: 18,
     right: 18,
     backgroundColor: "#F8FAFC",

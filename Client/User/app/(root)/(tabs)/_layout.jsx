@@ -1,4 +1,6 @@
+import { View } from "react-native";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -6,26 +8,48 @@ import { useCart } from "../../../context/CartContext";
 
 export default function TabLayout() {
   const { cartCount } = useCart();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 70 + insets.bottom;
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#FFFFFF",
-        tabBarInactiveTintColor: "#94A3B8",
-        tabBarStyle: {
-          backgroundColor: "#0F172A",
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
-          borderTopWidth: 0,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "500",
-          marginTop: 4,
-        },
-      }}
-    >
+    <View style={{ flex: 1, backgroundColor: "#E6EEF8" }}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: "#FFFFFF",
+          tabBarInactiveTintColor: "#94A3B8",
+          tabBarStyle: {
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#0F172A",
+            height: tabBarHeight,
+            paddingBottom: 10 + insets.bottom,
+            paddingTop: 10,
+            borderTopWidth: 0,
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            borderBottomLeftRadius: 30,
+            borderBottomRightRadius: 30,
+            overflow: "hidden",
+            elevation: 0,
+            shadowOpacity: 0,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: "500",
+            marginTop: 4,
+          },
+        }}
+        sceneContainerStyle={{
+          backgroundColor: "#E6EEF8",
+          borderBottomLeftRadius: 30,
+          borderBottomRightRadius: 30,
+          overflow: "hidden",
+          marginBottom: tabBarHeight,
+        }}
+      >
       {/* Home */}
       <Tabs.Screen
         name="index"
@@ -75,5 +99,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
-}
+}
