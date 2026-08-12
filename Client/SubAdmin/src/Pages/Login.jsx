@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import authService from "../server/authService";
+import authService from "../services/authService";
 import {
   Store,
   Loader2,
@@ -21,6 +21,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -61,8 +62,8 @@ const Login = () => {
     try {
       const data = await authService.login(email, password);
       if (data.success && data.token && data.user) {
-        if (data.user.role !== "admin") {
-          setError("Access denied. Admin role required.");
+        if (!(data.user.role === "subAdmin" || data.user.role === "admin")) {
+          setError("Access denied. Sub-admin role required.");
           setLoading(false);
           return;
         }

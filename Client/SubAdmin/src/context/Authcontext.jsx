@@ -1,25 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import authService from "../server/authService";
+import authService from "../services/authService";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("admin_user");
+    const savedUser = localStorage.getItem("subadmin_user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem("admin_token"));
+  const [token, setToken] = useState(() => localStorage.getItem("subadmin_token"));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifySession = async () => {
-      const storedToken = localStorage.getItem("admin_token");
+      const storedToken = localStorage.getItem("subadmin_token");
       if (storedToken) {
         try {
           const res = await authService.getProfile();
-          if (res.success && res.user && res.user.role === "admin") {
+          if (res.success && res.user && (res.user.role === "subAdmin" || res.user.role === "admin")) {
             setUser(res.user);
-            localStorage.setItem("admin_user", JSON.stringify(res.user));
+            localStorage.setItem("subadmin_user", JSON.stringify(res.user));
           } else {
             handleLogout();
           }
@@ -39,8 +39,8 @@ export const AuthProvider = ({ children }) => {
   const handleLogin = (jwtToken, userData) => {
     setToken(jwtToken);
     setUser(userData);
-    localStorage.setItem("admin_token", jwtToken);
-    localStorage.setItem("admin_user", JSON.stringify(userData));
+    localStorage.setItem("subadmin_token", jwtToken);
+    localStorage.setItem("subadmin_user", JSON.stringify(userData));
   };
 
   const handleLogout = async () => {
@@ -51,8 +51,8 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setToken(null);
       setUser(null);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("admin_user");
+      localStorage.removeItem("subadmin_token");
+      localStorage.removeItem("subadmin_user");
     }
   };
 
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login: handleLogin,
         logout: handleLogout,
-        isAuthenticated: !!token && user?.role === "admin",
+        isAuthenticated: !!token && (user?.role === "subAdmin" || user?.role === "admin"),
       }}
     >
       {children}

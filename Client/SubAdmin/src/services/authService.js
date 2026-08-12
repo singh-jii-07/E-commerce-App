@@ -3,8 +3,8 @@ import { authAxios } from "../api/axiosInstance";
 export const authService = {
   login: async (email, password) => {
     const response = await authAxios.post("/user/login", { email, password });
-    if (response.data.success && response.data.user?.role !== "admin") {
-      throw new Error("Access denied. Admin privileges required.");
+    if (response.data.success && !(response.data.user?.role === "subAdmin" || response.data.user?.role === "admin")) {
+      throw new Error("Access denied. Sub-admin privileges required.");
     }
     return response.data;
   },

@@ -4,7 +4,8 @@ import Address from "../models/Address.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Razorpay from "razorpay";
-import mongoose from "mongoose"
+import mongoose from "mongoose";
+import ReturnRequest from "../models/ReturnRequest.js";
 
 let razorpayInstance = null;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
@@ -902,6 +903,188 @@ const downloadInvoice = async (req, res) => {
   }
 };
 
+// Create Return/Refund/Replace Request
+const createReturnRequest = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { orderId, requestType, reason, items } = req.body;
+
+    if (!orderId || !requestType || !reason) {
+      return res.status(400).json({
+        success: false,
+        message: "Order ID, Request Type, and Reason are required.",
+      });
+    }
+
+    const order = await Order.findOne({ _id: orderId, user: userId });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
+
+    // Check if there is an existing pending return request for this order
+    const existingRequest = await ReturnRequest.findOne({ order: orderId, status: "Pending" });
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        message: "A pending return request already exists for this order.",
+      });
+    }
+
+    // Populate items
+    let requestItems = [];
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const orderItem = order.items.find(oi => oi.product.toString() === item.product);
+        if (!orderItem) {
+          return res.status(400).json({
+            success: false,
+            message: `Product ${item.product} is not part of this order.`,
+          });
+        }
+        requestItems.push({
+          product: item.product,
+          quantity: item.quantity || orderItem.quantity,
+          price: orderItem.price,
+        });
+      }
+    } else {
+      // Default to all items in the order
+      requestItems = order.items.map(oi => ({
+        product: oi.product,
+        quantity: oi.quantity,
+        price: oi.price,
+      }));
+    }
+
+    const returnRequest = await ReturnRequest.create({
+      order: orderId,
+      user: userId,
+      items: requestItems,
+      requestType,
+      reason,
+      status: "Pending",
+    });
+
+    // If user cancelled pre-paid order, we update orderStatus to Cancelled
+    if (requestType === "Refund" && order.orderStatus !== "Delivered" && order.paymentMethod === "Razorpay") {
+      order.orderStatus = "Cancelled";
+      await order.save();
+      
+      // Restore stock
+      for (const item of order.items) {
+        if (item.product) {
+          await Product.findByIdAndUpdate(item.product, {
+            $inc: { stock: item.quantity },
+          });
+        }
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `${requestType} request submitted successfully.`,
+      data: returnRequest,
+    });
+  } catch (error) {
+    console.error("Create Return Request Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error.",
+    });
+  }
+};
+
+// Get all return/refund requests (with filter option)
+const getReturnRequests = async (req, res) => {
+  try {
+    let filter = {};
+
+    if (req.role === "admin" || req.role === "subAdmin") {
+      const { status, type } = req.query;
+      if (status) filter.status = status;
+      if (type) filter.requestType = type;
+    } else {
+      filter.user = req.userId;
+    }
+
+    const requests = await ReturnRequest.find(filter)
+      .populate("order")
+      .populate("items.product", "name price images")
+      .populate("user", "username email")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Return requests fetched successfully.",
+      count: requests.length,
+      data: requests,
+    });
+  } catch (error) {
+    console.error("Get Return Requests Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error.",
+    });
+  }
+};
+
+// Update Return request status (Sub-admin / Admin only)
+const updateReturnRequestStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, adminNotes } = req.body;
+
+    const allowedStatus = ["Pending", "Processing", "Approved", "Rejected", "Completed"];
+    if (status && !allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value.",
+      });
+    }
+
+    const request = await ReturnRequest.findById(id).populate("order");
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Return request not found.",
+      });
+    }
+
+    if (status) {
+      request.status = status;
+    }
+    if (adminNotes !== undefined) {
+      request.adminNotes = adminNotes;
+    }
+
+    await request.save();
+
+    // If approved or completed and request type is Refund, mark order as Refunded
+    if ((status === "Completed" || status === "Approved") && request.requestType === "Refund") {
+      const order = request.order;
+      if (order) {
+        order.paymentStatus = "Refunded";
+        await order.save();
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Return request status updated successfully.",
+      data: request,
+    });
+  } catch (error) {
+    console.error("Update Return Request Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error.",
+    });
+  }
+};
+
 export {
   createOrder,
   createOrderRazorpay,
@@ -912,4 +1095,7 @@ export {
   getAllOrders,
   updateOrderStatus,
   downloadInvoice,
+  createReturnRequest,
+  getReturnRequests,
+  updateReturnRequestStatus,
 };
