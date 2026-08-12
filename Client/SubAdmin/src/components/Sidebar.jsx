@@ -57,11 +57,11 @@ const Sidebar = () => {
         : []),
       { name: "Returns/Refunds", path: "/returns", icon: History },
       { name: "Reviews", path: "/reviews", icon: Star },
+      { name: "Customer Support", path: "/support", icon: Mail },
       ...(!isSubAdmin
         ? [
             { name: "Users", path: "/users", icon: Users },
             { name: "FAQs", path: "/faqs", icon: HelpCircle },
-            { name: "Contact Messages", path: "/contacts", icon: Mail },
             { name: "Register", path: "/register", icon: UserPlus },
           ]
         : []),

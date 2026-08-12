@@ -41,6 +41,8 @@ const AppRoutes = () => {
             <Route index element={<Navigate to="/returns" replace />} />
             <Route path="returns" element={<ReturnsPage />} />
             <Route path="reviews" element={<ReviewsPage />} />
+            <Route path="support" element={<ContactsPage />} />
+            <Route path="contacts" element={<ContactsPage />} />
           </>
         ) : (
           <>

@@ -105,7 +105,7 @@ const getAllContacts = async (req, res) => {
 
     let query = {};
     if (req.role === "subAdmin") {
-      query.assignedTo = req.userId;
+      query.assignedTo = String(req.userId);
     }
 
     const contacts = await Contact.find(query).sort({ priorityWeight: -1, createdAt: -1 });
@@ -164,17 +164,17 @@ const assignContactSupport = async (req, res) => {
 
 const updateContactStatus = async (req, res) => {
   try {
-    if (req.role !== "admin" && req.role !== "subAdmin") {
+    if (req.role !== "subAdmin") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin or Sub-admin only.",
+        message: "Access denied. Only assigned Sub-admins can update status.",
       });
     }
 
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!["Pending", "Solved"].includes(status)) {
+    if (!["Pending", "Processing", "Completed", "Solved"].includes(status)) {
       return res.status(400).json({
         success: false,
         message: "Invalid status value.",
@@ -189,7 +189,7 @@ const updateContactStatus = async (req, res) => {
       });
     }
 
-    if (req.role === "subAdmin" && contact.assignedTo !== req.userId) {
+    if (String(contact.assignedTo) !== String(req.userId)) {
       return res.status(403).json({
         success: false,
         message: "Access denied. This ticket is not assigned to you.",

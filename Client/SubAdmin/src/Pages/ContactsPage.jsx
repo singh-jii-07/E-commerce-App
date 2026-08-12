@@ -71,22 +71,16 @@ const ContactsPage = () => {
     });
   };
 
-  const getPriorityBadge = (priority) => {
-    switch (priority) {
-      case "High":
-        return "bg-rose-50 text-rose-700 border-rose-100";
-      case "Medium":
-        return "bg-amber-50 text-amber-700 border-amber-100";
-      default:
-        return "bg-slate-50 text-slate-600 border-slate-100";
-    }
-  };
-
   const getStatusBadge = (status) => {
-    if (status === "Solved") {
-      return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    switch (status) {
+      case "Completed":
+      case "Solved":
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
+      case "Processing":
+        return "bg-blue-50 text-blue-700 border-blue-100";
+      default:
+        return "bg-amber-50 text-amber-700 border-amber-100";
     }
-    return "bg-amber-50 text-amber-700 border-amber-100";
   };
 
   return (
@@ -129,7 +123,6 @@ const ContactsPage = () => {
                 <tr className="bg-gray-50 text-gray-700 uppercase tracking-wider text-[10px] font-semibold border-b border-gray-200">
                   <th className="p-3">Ticket ID</th>
                   <th className="p-3">Customer Info</th>
-                  <th className="p-3">Priority</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Subject / Message</th>
                   <th className="p-3">Date</th>
@@ -150,14 +143,15 @@ const ContactsPage = () => {
                       <div className="text-[10px] text-gray-500 ml-5 font-mono">{contact.email}</div>
                     </td>
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded border font-semibold text-[10px] ${getPriorityBadge(contact.priority)}`}>
-                        {contact.priority || "Low"}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded border font-semibold text-[10px] ${getStatusBadge(contact.status)}`}>
-                        {contact.status || "Pending"}
-                      </span>
+                      <select
+                        value={contact.status || "Pending"}
+                        onChange={(e) => handleStatusUpdate(contact._id, e.target.value)}
+                        className={`px-2 py-1 rounded border font-semibold text-[10px] cursor-pointer focus:outline-none ${getStatusBadge(contact.status)}`}
+                      >
+                        <option value="Pending" className="bg-white text-gray-800">Pending</option>
+                        <option value="Processing" className="bg-white text-gray-800">Processing</option>
+                        <option value="Completed" className="bg-white text-gray-800">Completed</option>
+                      </select>
                     </td>
                     <td className="p-3 max-w-xs">
                       <p className="font-bold text-gray-900 truncate">{contact.subject}</p>
@@ -171,26 +165,11 @@ const ContactsPage = () => {
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {contact.status !== "Solved" ? (
-                          <button
-                            onClick={() => handleStatusUpdate(contact._id, "Solved")}
-                            className="py-1 px-2.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[10px] transition-colors border border-emerald-200"
-                          >
-                            Solve
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleStatusUpdate(contact._id, "Pending")}
-                            className="py-1 px-2.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold text-[10px] transition-colors border border-amber-200"
-                          >
-                            Reopen
-                          </button>
-                        )}
                         <button
                           onClick={() => setSelectedMessage(contact)}
                           className="py-1 px-2.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-[10px] transition-colors border border-indigo-200"
                         >
-                          View
+                          View Details
                         </button>
                       </div>
                     </td>
@@ -220,21 +199,28 @@ const ContactsPage = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-3 rounded-lg border border-gray-100">
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Ticket ID / Status</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Ticket ID</p>
                   <p className="font-bold text-gray-900 mt-0.5">{selectedMessage.ticketId || "N/A"}</p>
-                  <div className="flex gap-1.5 mt-1">
-                    <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${getPriorityBadge(selectedMessage.priority)}`}>
-                      {selectedMessage.priority || "Low"}
-                    </span>
-                    <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${getStatusBadge(selectedMessage.status)}`}>
-                      {selectedMessage.status || "Pending"}
-                    </span>
-                  </div>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">From / Date</p>
                   <p className="font-bold text-gray-800 mt-0.5">{selectedMessage.name || "Anonymous"}</p>
                   <p className="text-gray-500 font-mono text-[10px]">{selectedMessage.email}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Ticket Status</p>
+                <div className="mt-1">
+                  <select
+                    value={selectedMessage.status || "Pending"}
+                    onChange={(e) => handleStatusUpdate(selectedMessage._id, e.target.value)}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer focus:outline-none w-full ${getStatusBadge(selectedMessage.status)}`}
+                  >
+                    <option value="Pending" className="bg-white text-gray-800 font-medium">Pending</option>
+                    <option value="Processing" className="bg-white text-gray-800 font-medium">Processing</option>
+                    <option value="Completed" className="bg-white text-gray-800 font-medium">Completed</option>
+                  </select>
                 </div>
               </div>
 
@@ -251,24 +237,7 @@ const ContactsPage = () => {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-between gap-3">
-              <div className="flex gap-2">
-                {selectedMessage.status !== "Solved" ? (
-                  <button
-                    onClick={() => handleStatusUpdate(selectedMessage._id, "Solved")}
-                    className="py-1.5 px-3 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs border border-emerald-200 transition-colors"
-                  >
-                    Mark Solved
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleStatusUpdate(selectedMessage._id, "Pending")}
-                    className="py-1.5 px-3 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold text-xs border border-amber-200 transition-colors"
-                  >
-                    Reopen Ticket
-                  </button>
-                )}
-              </div>
+            <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setSelectedMessage(null)}
                 className="py-1.5 px-4 rounded bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs transition-colors shadow-sm"
