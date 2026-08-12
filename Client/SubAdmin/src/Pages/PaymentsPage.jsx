@@ -114,9 +114,9 @@ const PaymentsPage = () => {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded border text-[11px] font-semibold ${getPaymentStatusBadge(
-                        o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Paid" : o.paymentStatus
+                        o.paymentStatus === "Refunded" ? "Refunded" : (o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Paid" : o.paymentStatus || "Pending")
                       )}`}>
-                        {o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Paid" : o.paymentStatus}
+                        {o.paymentStatus === "Refunded" ? "Refunded" : (o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Paid" : o.paymentStatus || "Pending")}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500">

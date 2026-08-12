@@ -16,6 +16,7 @@ import TransactionsPage from "./pages/TransactionsPage";
 import InvoicesPage from "./pages/InvoicesPage";
 import Register from "./pages/Register";
 import ReturnsPage from "./pages/ReturnsPage";
+import ReviewsPage from "./pages/ReviewsPage";
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ const AppRoutes = () => {
           <>
             <Route index element={<Navigate to="/returns" replace />} />
             <Route path="returns" element={<ReturnsPage />} />
+            <Route path="reviews" element={<ReviewsPage />} />
           </>
         ) : (
           <>
@@ -54,6 +56,7 @@ const AppRoutes = () => {
             <Route path="contacts" element={<ContactsPage />} />
             <Route path="register" element={<Register />} />
             <Route path="returns" element={<ReturnsPage />} />
+            <Route path="reviews" element={<ReviewsPage />} />
           </>
         )}
       </Route>

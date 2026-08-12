@@ -117,9 +117,9 @@ const TransactionsPage = () => {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded border text-[11px] font-semibold ${getTransactionStatusBadge(
-                          o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Paid" : o.paymentStatus
+                          o.paymentStatus === "Refunded" ? "Refunded" : (o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Paid" : o.paymentStatus)
                         )}`}>
-                          {o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Success" : o.paymentStatus === "Paid" ? "Success" : o.paymentStatus}
+                          {o.paymentStatus === "Refunded" ? "Refunded" : (o.orderStatus === "Delivered" && o.paymentMethod === "COD" ? "Success" : o.paymentStatus === "Paid" ? "Success" : o.paymentStatus)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-500">

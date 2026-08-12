@@ -18,6 +18,7 @@ import {
   FileText,
   Percent,
   UserPlus,
+  Star,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -55,6 +56,7 @@ const Sidebar = () => {
           ]
         : []),
       { name: "Returns/Refunds", path: "/returns", icon: History },
+      { name: "Reviews", path: "/reviews", icon: Star },
       ...(!isSubAdmin
         ? [
             { name: "Users", path: "/users", icon: Users },

@@ -185,4 +185,32 @@ const updateReview = async (req, res) => {
   }
 };
 
-export { addReview, getReviewsByProduct, updateReview }
+const getAllReviews = async (req, res) => {
+  try {
+    if (req.role !== "admin" && req.role !== "subAdmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin or Sub-admin only.",
+      });
+    }
+
+    const reviews = await Review.find()
+      .populate("product", "name price images")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "All reviews fetched successfully",
+      count: reviews.length,
+      data: reviews,
+    });
+  } catch (error) {
+    console.error("GET ALL REVIEWS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export { addReview, getReviewsByProduct, updateReview, getAllReviews }

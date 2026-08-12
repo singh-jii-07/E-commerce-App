@@ -16,6 +16,7 @@ import TransactionsPage from "./pages/TransactionsPage";
 import InvoicesPage from "./pages/InvoicesPage";
 import Register from "./pages/Register";
 import ReturnsPage from "./pages/ReturnsPage";
+import ReviewsPage from "./pages/ReviewsPage";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
             <Route path="contacts" element={<ContactsPage />} />
             <Route path="register" element={<Register/>} />
             <Route path="returns" element={<ReturnsPage />} />
+            <Route path="reviews" element={<ReviewsPage />} />
           </Route>
 
           {/* Catch-all Redirect */}

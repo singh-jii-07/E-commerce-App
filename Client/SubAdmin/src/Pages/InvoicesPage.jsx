@@ -107,11 +107,13 @@ const InvoicesPage = () => {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded border text-[11px] font-semibold ${
-                          o.paymentStatus === "Paid" || (o.orderStatus === "Delivered" && o.paymentMethod === "COD")
-                            ? "bg-green-100 text-green-700 border-green-200"
-                            : "bg-amber-100 text-amber-700 border-amber-200"
+                          o.paymentStatus === "Refunded"
+                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                            : (o.paymentStatus === "Paid" || (o.orderStatus === "Delivered" && o.paymentMethod === "COD")
+                                ? "bg-green-100 text-green-700 border-green-200"
+                                : "bg-amber-100 text-amber-700 border-amber-200")
                         }`}>
-                          {o.paymentStatus === "Paid" || (o.orderStatus === "Delivered" && o.paymentMethod === "COD") ? "Paid" : o.paymentStatus}
+                          {o.paymentStatus === "Refunded" ? "Refunded" : (o.paymentStatus === "Paid" || (o.orderStatus === "Delivered" && o.paymentMethod === "COD") ? "Paid" : o.paymentStatus)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-500">
