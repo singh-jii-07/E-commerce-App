@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import Razorpay from "razorpay";
 import mongoose from "mongoose";
 import ReturnRequest from "../models/ReturnRequest.js";
+import sendPushNotification from "../utils/sendPushNotification.js";
 
 let razorpayInstance = null;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
@@ -478,6 +479,22 @@ const cancelOrder = async (req, res) => {
       }
     }
 
+    // Trigger Push Notification for Order Cancelled
+    try {
+      const userDoc = await User.findOne({ authUserId: userId });
+      if (userDoc && userDoc.pushToken) {
+        const shortId = order._id.toString().slice(-6).toUpperCase();
+        const title = "❌ Order Cancelled";
+        const body = `Your order #${shortId} has been successfully cancelled.`;
+        sendPushNotification(userDoc.pushToken, title, body, {
+          orderId: order._id,
+          status: "Cancelled",
+        });
+      }
+    } catch (pushErr) {
+      console.error("Push notification error on cancel order:", pushErr.message);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Order cancelled successfully.",
@@ -596,6 +613,22 @@ const updateOrderStatus = async (req, res) => {
 
     order.orderStatus = orderStatus;
     await order.save();
+
+    // Trigger Push Notification for Order Status Update
+    try {
+      const userDoc = await User.findOne({ authUserId: order.user });
+      if (userDoc && userDoc.pushToken) {
+        const shortId = order._id.toString().slice(-6).toUpperCase();
+        const title = "📦 Order Status Update";
+        const body = `Your order #${shortId} status has been updated to "${orderStatus}".`;
+        sendPushNotification(userDoc.pushToken, title, body, {
+          orderId: order._id,
+          status: orderStatus,
+        });
+      }
+    } catch (pushErr) {
+      console.error("Push notification error on status update:", pushErr.message);
+    }
 
     return res.status(200).json({
       success: true,

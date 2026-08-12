@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "59680172392",
+    "project_id": "agumentikgroceryuser",
+    "storage_bucket": "agumentikgroceryuser.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59680172392:android:8de83a4281c08075d78edd",
+        "android_client_info": {
+          "package_name": "com.agumentik.groceryuser"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCe_fHl9-uwt0uFTPtKFYpEYUBdbxM7h8E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

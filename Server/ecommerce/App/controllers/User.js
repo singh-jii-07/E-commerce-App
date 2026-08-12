@@ -58,7 +58,46 @@ const getUserById = async (req, res) => {
   }
 };
 
+import User from "../models/User.js";
+
+const updatePushToken = async (req, res) => {
+  try {
+    const { pushToken } = req.body;
+    const userId = req.userId;
+
+    if (!pushToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Push token is required.",
+      });
+    }
+
+    let userDoc = await User.findOne({ authUserId: userId });
+    if (!userDoc) {
+      userDoc = await User.create({
+        authUserId: userId,
+        pushToken,
+      });
+    } else {
+      userDoc.pushToken = pushToken;
+      await userDoc.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Push token updated successfully.",
+    });
+  } catch (error) {
+    console.error("UPDATE PUSH TOKEN ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
 export {
   getAllUsers,
   getUserById,
+  updatePushToken,
 };
