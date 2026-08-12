@@ -11,6 +11,8 @@ import {
   Alert,
   Platform,
   StatusBar,
+  Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -18,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import productService from "../../services/productService";
 import reviewService from "../../services/reviewService";
 import cartService from "../../services/cartService";
+import authService from "../../services/authService";
 import { useCart } from "../../context/CartContext";
 
 const ProductDetails = () => {
@@ -31,6 +34,14 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Edit Review State
+  const [editingReview, setEditingReview] = useState(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editComment, setEditComment] = useState("");
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [updatingReview, setUpdatingReview] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -41,11 +52,16 @@ const ProductDetails = () => {
   const fetchProductDetails = async () => {
     try {
       setLoading(true);
-      const [prodRes, revRes, allProdsRes] = await Promise.all([
+      const [prodRes, revRes, allProdsRes, profileRes] = await Promise.all([
         productService.getProductById(id),
         reviewService.getReviewsByProduct(id).catch(() => ({ success: false, data: [] })),
         productService.getProducts().catch(() => ({ success: false, data: [] })),
+        authService.getProfile().catch(() => null),
       ]);
+
+      if (profileRes && profileRes.success && profileRes.user) {
+        setCurrentUser(profileRes.user);
+      }
 
       if (prodRes && prodRes.success && prodRes.data) {
         setProduct(prodRes.data);
@@ -73,6 +89,40 @@ const ProductDetails = () => {
       console.log("Error loading product details:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditReviewPress = (rev) => {
+    setEditingReview(rev);
+    setEditRating(rev.rating);
+    setEditComment(rev.comment || "");
+    setEditModalVisible(true);
+  };
+
+  const handleUpdateReview = async () => {
+    if (!editingReview) return;
+    try {
+      setUpdatingReview(true);
+      const res = await reviewService.updateReview(editingReview._id, {
+        rating: Number(editRating),
+        comment: editComment ? editComment.trim() : "",
+      });
+      if (res && res.success) {
+        Alert.alert("Success", "Review updated successfully!");
+        setEditModalVisible(false);
+        // Refresh reviews
+        const revRes = await reviewService.getReviewsByProduct(id);
+        if (revRes && revRes.success && Array.isArray(revRes.data)) {
+          setReviews(revRes.data);
+        }
+      } else {
+        Alert.alert("Error", res?.message || "Could not update review.");
+      }
+    } catch (err) {
+      console.log("Error updating review:", err);
+      Alert.alert("Error", err.response?.data?.message || err.message || "Failed to update review.");
+    } finally {
+      setUpdatingReview(false);
     }
   };
 
@@ -245,9 +295,20 @@ const ProductDetails = () => {
                       </View>
 
                       <View style={{ flex: 1, marginLeft: 10 }}>
-                        <Text style={styles.reviewerName}>
-                          {rev.user?.username || rev.user?.name || "Verified Customer"}
-                        </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                          <Text style={styles.reviewerName}>
+                            {rev.user?.username || rev.user?.name || "Verified Customer"}
+                          </Text>
+                          {currentUser && rev.userId === currentUser._id && (
+                            <TouchableOpacity
+                              onPress={() => handleEditReviewPress(rev)}
+                              style={{ padding: 4 }}
+                              activeOpacity={0.7}
+                            >
+                              <Ionicons name="pencil" size={16} color="#FF5500" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
                         {renderStars(rev.rating)}
                       </View>
 
@@ -329,17 +390,92 @@ const ProductDetails = () => {
             ]}
             onPress={handleAddToCart}
             disabled={addingToCart || product.stock <= 0}
-            activeOpacity={0.85}
+            activeOpacity={0.8}
           >
             {addingToCart ? (
               <ActivityIndicator size="small" color="#0F172A" />
             ) : (
               <Text style={styles.addToCartPillText}>
-                {product.stock > 0 ? "Add to cart" : "Out of Stock"}
+                {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
               </Text>
             )}
           </TouchableOpacity>
         </View>
+
+        {/* Edit Review Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={editModalVisible}
+          onRequestClose={() => setEditModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalSheetContent}>
+              {/* Modal Header */}
+              <View style={styles.modalHeaderRow}>
+                <Text style={styles.modalTitleText}>Edit Review</Text>
+                <TouchableOpacity
+                  style={styles.modalCloseCircle}
+                  onPress={() => setEditModalVisible(false)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="close" size={20} color="#0D172A" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalSubtitleText}>
+                Modify your rating and feedback comments below.
+              </Text>
+
+              {/* Star selection */}
+              <View style={styles.starRatingRow}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setEditRating(star)}
+                    style={{ marginHorizontal: 6 }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={star <= editRating ? "star" : "star-outline"}
+                      size={36}
+                      color={star <= editRating ? "#FFD700" : "#CBD5E1"}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Comment TextInput */}
+              <Text style={styles.inputFieldLabel}>Feedback Comments</Text>
+              <TextInput
+                placeholder="Update your review details..."
+                placeholderTextColor="#94A3B8"
+                value={editComment}
+                onChangeText={(txt) => setEditComment(txt)}
+                multiline
+                numberOfLines={4}
+                style={styles.modalFeedbackInput}
+              />
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[
+                  styles.modalSubmitNavyBtn,
+                  updatingReview && { opacity: 0.7 },
+                ]}
+                onPress={handleUpdateReview}
+                disabled={updatingReview}
+                activeOpacity={0.85}
+              >
+                {updatingReview ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalSubmitNavyBtnText}>Update Review</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -576,5 +712,80 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "flex-end",
+  },
+  modalSheetContent: {
+    backgroundColor: "#F8FAFC",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: Platform.OS === "ios" ? 38 : 24,
+  },
+  modalHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modalTitleText: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#0D172A",
+  },
+  modalCloseCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalSubtitleText: {
+    fontSize: 14,
+    color: "#64748B",
+    textAlign: "center",
+    marginVertical: 16,
+    lineHeight: 20,
+    paddingHorizontal: 16,
+  },
+  starRatingRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  inputFieldLabel: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#0D172A",
+    marginBottom: 10,
+  },
+  modalFeedbackInput: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    fontSize: 14,
+    color: "#0D172A",
+    minHeight: 110,
+    textAlignVertical: "top",
+    marginBottom: 20,
+  },
+  modalSubmitNavyBtn: {
+    backgroundColor: "#0F172A",
+    borderRadius: 30,
+    paddingVertical: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalSubmitNavyBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
   },
 });

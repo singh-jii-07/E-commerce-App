@@ -109,6 +109,7 @@ import Product from "../models/Product.js";
       const obj = rev.toObject();
       return {
         ...obj,
+        userId: obj.user,
         user: {
           name: obj.userName || "Verified Customer"
         }
@@ -131,4 +132,57 @@ import Product from "../models/Product.js";
   }
 };
 
-export {addReview, getReviewsByProduct}
+const updateReview = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+
+    if (!rating) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Review ID",
+      });
+    }
+
+    const review = await Review.findById(id);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    if (review.user.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only edit your own reviews",
+      });
+    }
+
+    review.rating = Number(rating);
+    review.comment = comment ? comment.trim() : "";
+    await review.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Review updated successfully",
+      data: review,
+    });
+  } catch (error) {
+    console.error("UPDATE REVIEW ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export { addReview, getReviewsByProduct, updateReview }

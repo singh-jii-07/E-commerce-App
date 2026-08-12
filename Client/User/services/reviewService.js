@@ -32,6 +32,17 @@ export const reviewService = {
     );
     return response.data;
   },
+
+  // Update an existing review
+  updateReview: async (reviewId, { rating, comment }) => {
+    const headers = await getAuthHeaders();
+    const response = await axios.put(
+      `${API_CONFIG.ECOMMERCE_BASE_URL}/review/update/${reviewId}`,
+      { rating, comment },
+      { headers }
+    );
+    return response.data;
+  },
 };
 
 export default reviewService;

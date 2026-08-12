@@ -21,6 +21,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import orderService from "../../services/orderService";
 import reviewService from "../../services/reviewService";
+import authService from "../../services/authService";
 
 const ORDER_STAGES = [
   {
@@ -89,6 +90,8 @@ const OrderDetails = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [modalMessageType, setModalMessageType] = useState("error");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [existingReviewId, setExistingReviewId] = useState(null);
 
   // Return & Refund State
   const [returnRequestState, setReturnRequestState] = useState(null);
@@ -106,17 +109,25 @@ const OrderDetails = () => {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
-      const res = await orderService.getOrderById(orderId);
+      const [res, returnRes, profileRes] = await Promise.all([
+        orderService.getOrderById(orderId),
+        orderService.getReturnRequests().catch(() => ({ success: false, data: [] })),
+        authService.getProfile().catch(() => null),
+      ]);
+
       if (res && res.success && res.data) {
         setOrder(res.data);
       }
       
-      const returnRes = await orderService.getReturnRequests();
       if (returnRes && returnRes.success && Array.isArray(returnRes.data)) {
         const orderRequest = returnRes.data.find(
           (r) => r.order?._id === orderId || r.order === orderId
         );
         setReturnRequestState(orderRequest || null);
+      }
+
+      if (profileRes && profileRes.success && profileRes.user) {
+        setCurrentUser(profileRes.user);
       }
     } catch (error) {
       console.log("Error loading order details:", error);
@@ -124,6 +135,33 @@ const OrderDetails = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const checkExistingReview = async () => {
+      if (!selectedProduct || !currentUser) return;
+      const prodId = typeof selectedProduct === "object" ? selectedProduct._id : selectedProduct;
+      if (!prodId) return;
+
+      try {
+        const revRes = await reviewService.getReviewsByProduct(prodId);
+        if (revRes && revRes.success && Array.isArray(revRes.data)) {
+          const userRev = revRes.data.find((r) => r.userId === currentUser._id);
+          if (userRev) {
+            setExistingReviewId(userRev._id);
+            setRating(userRev.rating);
+            setComment(userRev.comment || "");
+            return;
+          }
+        }
+      } catch (err) {
+        console.log("Error checking existing review:", err);
+      }
+      setExistingReviewId(null);
+      setRating(5);
+      setComment("");
+    };
+    checkExistingReview();
+  }, [selectedProduct, currentUser]);
 
   const openReviewModal = (product = null) => {
     if (product) {
@@ -162,27 +200,35 @@ const OrderDetails = () => {
       setSubmittingReview(true);
       setModalMessage("");
 
-      const res = await reviewService.addReview({
-        product: prodId,
-        rating: Number(rating),
-        comment: comment ? comment.trim() : "",
-      });
+      let res;
+      if (existingReviewId) {
+        res = await reviewService.updateReview(existingReviewId, {
+          rating: Number(rating),
+          comment: comment ? comment.trim() : "",
+        });
+      } else {
+        res = await reviewService.addReview({
+          product: prodId,
+          rating: Number(rating),
+          comment: comment ? comment.trim() : "",
+        });
+      }
 
       if (res && res.success) {
-        setModalMessage("Review submitted successfully!");
+        setModalMessage(existingReviewId ? "Review updated successfully!" : "Review submitted successfully!");
         setModalMessageType("success");
         setTimeout(() => {
           setReviewModalVisible(false);
           setModalMessage("");
         }, 1500);
       } else {
-        setModalMessage(res?.message || "Could not submit review.");
+        setModalMessage(res?.message || (existingReviewId ? "Could not update review." : "Could not submit review."));
         setModalMessageType("error");
       }
     } catch (err) {
       console.log("Submit review error:", err);
       const errMsg =
-        err?.response?.data?.message || err.message || "Failed to submit review.";
+        err?.response?.data?.message || err.message || (existingReviewId ? "Failed to update review." : "Failed to submit review.");
       setModalMessage(errMsg);
       setModalMessageType("error");
     } finally {
@@ -713,7 +759,7 @@ const OrderDetails = () => {
               {submittingReview ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.modalSubmitNavyBtnText}>Submit Review</Text>
+                <Text style={styles.modalSubmitNavyBtnText}>{existingReviewId ? "Update Review" : "Submit Review"}</Text>
               )}
             </TouchableOpacity>
           </View>
