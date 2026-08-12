@@ -34,6 +34,33 @@ const contactSchema = new mongoose.Schema(
       trim: true,
       maxlength: 1000,
     },
+
+    ticketId: {
+      type: String,
+      unique: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["Pending", "Solved"],
+      default: "Pending",
+    },
+
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High"],
+      default: "Low",
+    },
+
+    priorityWeight: {
+      type: Number,
+      default: 1, // 1: Low, 2: Medium, 3: High
+    },
+
+    assignedTo: {
+      type: String, // authUserId string of the sub-admin
+      default: null,
+    },
   },
   {
     timestamps: true,

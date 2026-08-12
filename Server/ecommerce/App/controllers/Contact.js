@@ -7,7 +7,7 @@ import User from "../models/User.js";
 const createContact = async (req, res) => {
   try {
     const userId = req.userId;
-    const { subject, message, name, email } = req.body;
+    const { subject, message, name, email, priority } = req.body;
 
     if (!subject || !message) {
       return res.status(400).json({
@@ -53,6 +53,19 @@ const createContact = async (req, res) => {
     contactName = contactName || "User";
     contactEmail = contactEmail || "user@example.com";
 
+    // Generate unique ticket ID
+    let ticketId = "TKT-" + Math.floor(100000 + Math.random() * 900000);
+    let exists = await Contact.findOne({ ticketId });
+    while (exists) {
+      ticketId = "TKT-" + Math.floor(100000 + Math.random() * 900000);
+      exists = await Contact.findOne({ ticketId });
+    }
+
+    // Set priority weight
+    let priorityWeight = 1;
+    let finalPriority = priority || "Low";
+    if (finalPriority === "High") priorityWeight = 3;
+    else if (finalPriority === "Medium") priorityWeight = 2;
  
     const contact = await Contact.create({
       user: user._id,
@@ -60,6 +73,9 @@ const createContact = async (req, res) => {
       email: contactEmail,
       subject,
       message,
+      ticketId,
+      priority: finalPriority,
+      priorityWeight,
     });
 
     return res.status(201).json({
@@ -80,7 +96,19 @@ const createContact = async (req, res) => {
 
 const getAllContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
+    if (req.role !== "admin" && req.role !== "subAdmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin or Sub-admin only.",
+      });
+    }
+
+    let query = {};
+    if (req.role === "subAdmin") {
+      query.assignedTo = req.userId;
+    }
+
+    const contacts = await Contact.find(query).sort({ priorityWeight: -1, createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -97,4 +125,92 @@ const getAllContacts = async (req, res) => {
   }
 };
 
-export { createContact, getAllContacts };
+const assignContactSupport = async (req, res) => {
+  try {
+    if (req.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin only.",
+      });
+    }
+
+    const { id } = req.params;
+    const { subAdminId } = req.body; // Sub-admin authUserId string
+
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact request not found.",
+      });
+    }
+
+    contact.assignedTo = subAdminId || null;
+    await contact.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Sub-admin assigned successfully.",
+      data: contact,
+    });
+  } catch (error) {
+    console.error("ASSIGN CONTACT SUPPORT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
+const updateContactStatus = async (req, res) => {
+  try {
+    if (req.role !== "admin" && req.role !== "subAdmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin or Sub-admin only.",
+      });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["Pending", "Solved"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value.",
+      });
+    }
+
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact request not found.",
+      });
+    }
+
+    if (req.role === "subAdmin" && contact.assignedTo !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. This ticket is not assigned to you.",
+      });
+    }
+
+    contact.status = status;
+    await contact.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Status updated to ${status} successfully.`,
+      data: contact,
+    });
+  } catch (error) {
+    console.error("UPDATE CONTACT STATUS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
+export { createContact, getAllContacts, assignContactSupport, updateContactStatus };
