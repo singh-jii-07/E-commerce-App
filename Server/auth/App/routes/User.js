@@ -16,5 +16,6 @@ userRoute.post('/changepassword',resetPassword)
 
 userRoute.get("/all", auth, admin, adminGetAllUsers);
 userRoute.get("/find/:id", auth, admin, adminGetUserById);
+userRoute.post("/add",auth,admin,register);
 
 export default userRoute;

@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import {sendOtpMail} from '../config/SendOtpMail.js'
 const register = async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, role } = req.body;
 
     if (!username || !password || !email) {
       return res.status(400).json({
@@ -27,6 +27,9 @@ const register = async (req, res) => {
         userExisting.password = await bcrypt.hash(password, 10);
         userExisting.otp = otp;
         userExisting.otpExpiry = otpExpiry;
+        if (role) {
+          userExisting.role = role;
+        }
 
         await userExisting.save();
         await sendOtpMail(userExisting);
@@ -45,6 +48,7 @@ const register = async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      role: role || "user",
       otp,
       otpExpiry,
       isVerified: false,

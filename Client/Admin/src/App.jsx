@@ -14,6 +14,7 @@ import ContactsPage from "./pages/ContactsPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import InvoicesPage from "./pages/InvoicesPage";
+import Register from "./pages/Register";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="users" element={<UsersPage />} />
             <Route path="faqs" element={<FaqsPage />} />
             <Route path="contacts" element={<ContactsPage />} />
+            <Route path="register" element={<Register/>} />
           </Route>
 
           {/* Catch-all Redirect */}

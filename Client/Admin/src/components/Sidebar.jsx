@@ -17,6 +17,7 @@ import {
   History,
   FileText,
   Percent,
+  UserPlus,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -50,6 +51,7 @@ const Sidebar = () => {
     { name: "Users", path: "/users", icon: Users },
     { name: "FAQs", path: "/faqs", icon: HelpCircle },
     { name: "Contact Messages", path: "/contacts", icon: Mail },
+  { name: "Register", path: "/register", icon: UserPlus },
   ];
 
   const ordersSubItems = [
