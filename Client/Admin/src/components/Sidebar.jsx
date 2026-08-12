@@ -47,9 +47,9 @@ const Sidebar = () => {
     const isSubAdmin = user?.role === "subAdmin";
 
     const navItems = [
-      { name: "Dashboard", path: "/", icon: LayoutDashboard },
       ...(!isSubAdmin
         ? [
+            { name: "Dashboard", path: "/", icon: LayoutDashboard },
             { name: "Products", path: "/products", icon: Package },
             { name: "Categories", path: "/categories", icon: Tags },
           ]

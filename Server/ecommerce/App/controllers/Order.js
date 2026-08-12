@@ -1011,9 +1011,13 @@ const getReturnRequests = async (req, res) => {
     }
 
     const requests = await ReturnRequest.find(filter)
-      .populate("order")
+      .populate({
+        path: "order",
+        populate: {
+          path: "address",
+        },
+      })
       .populate("items.product", "name price images")
-      .populate("user", "username email")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({

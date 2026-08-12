@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
@@ -17,23 +17,31 @@ import InvoicesPage from "./pages/InvoicesPage";
 import Register from "./pages/Register";
 import ReturnsPage from "./pages/ReturnsPage";
 
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Login Route */}
-          <Route path="/login" element={<Login />} />
+const AppRoutes = () => {
+  const { user } = useAuth();
+  const isSubAdmin = user?.role === "subAdmin";
 
-          {/* Protected Sub-Admin Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
+  return (
+    <Routes>
+      {/* Public Login Route */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        {isSubAdmin ? (
+          <>
+            <Route index element={<Navigate to="/returns" replace />} />
+            <Route path="returns" element={<ReturnsPage />} />
+          </>
+        ) : (
+          <>
             <Route index element={<DashboardHome />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
@@ -46,11 +54,21 @@ function App() {
             <Route path="contacts" element={<ContactsPage />} />
             <Route path="register" element={<Register />} />
             <Route path="returns" element={<ReturnsPage />} />
-          </Route>
+          </>
+        )}
+      </Route>
 
-          {/* Catch-all Redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      {/* Catch-all Redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );

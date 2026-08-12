@@ -21,7 +21,7 @@ export const ecommerceAxios = axios.create({
 
 // Interceptor to inject JWT token into request headers
 const addAuthToken = (config) => {
-  const token = localStorage.getItem("admin_token");
+  const token = localStorage.getItem("subadmin_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -32,9 +32,9 @@ const addAuthToken = (config) => {
 const handleResponseError = (error) => {
   if (error.response && error.response.status === 401) {
     // Token expired or invalid
-    if (localStorage.getItem("admin_token")) {
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("admin_user");
+    if (localStorage.getItem("subadmin_token")) {
+      localStorage.removeItem("subadmin_token");
+      localStorage.removeItem("subadmin_user");
       window.location.href = "/login";
     }
   }

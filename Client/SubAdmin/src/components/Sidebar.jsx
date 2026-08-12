@@ -47,9 +47,9 @@ const Sidebar = () => {
     const isSubAdmin = user?.role === "subAdmin";
 
     const navItems = [
-      { name: "Dashboard", path: "/", icon: LayoutDashboard },
       ...(!isSubAdmin
         ? [
+            { name: "Dashboard", path: "/", icon: LayoutDashboard },
             { name: "Products", path: "/products", icon: Package },
             { name: "Categories", path: "/categories", icon: Tags },
           ]
@@ -80,7 +80,7 @@ const Sidebar = () => {
           <Store className="w-5 h-5" />
         </div>
         <div>
-          <h1 className="font-semibold text-white text-base tracking-tight">Admin Portal</h1>
+          <h1 className="font-semibold text-white text-base tracking-tight">Sub-Admin Portal</h1>
           <p className="text-[11px] text-gray-400">Grocery Store</p>
         </div>
       </div>

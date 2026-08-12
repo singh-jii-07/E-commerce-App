@@ -50,6 +50,27 @@ export const orderService = {
     );
     return response.data;
   },
+
+  // Submit return/refund/replace request
+  submitReturnRequest: async (requestData) => {
+    const headers = await getAuthHeaders();
+    const response = await axios.post(
+      `${API_CONFIG.ECOMMERCE_BASE_URL}/order/return`,
+      requestData,
+      { headers }
+    );
+    return response.data;
+  },
+
+  // Get user's return requests
+  getReturnRequests: async () => {
+    const headers = await getAuthHeaders();
+    const response = await axios.get(
+      `${API_CONFIG.ECOMMERCE_BASE_URL}/order/return-requests`,
+      { headers }
+    );
+    return response.data;
+  },
 };
 
 export default orderService;

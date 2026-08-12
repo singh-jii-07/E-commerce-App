@@ -172,7 +172,7 @@ export default function DeliveryAddress() {
                 <Ionicons name="location-outline" size={64} color="#CBD5E1" />
                 <Text style={styles.emptyTitle}>No Addresses Found</Text>
                 <Text style={styles.emptySubtitle}>
-                  You haven't added any delivery addresses yet. Add one to speed up checkout!
+                  You haven{"'"}t added any delivery addresses yet. Add one to speed up checkout!
                 </Text>
                 <TouchableOpacity
                   style={styles.emptyButton}

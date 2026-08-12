@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { authAxios } from "../api/axiosInstance";
+import { ecommerceAxios } from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import {
   RotateCcw,
@@ -38,7 +38,7 @@ const ReturnsPage = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await authAxios.get("/order/return-requests");
+      const res = await ecommerceAxios.get("/order/return-requests");
       if (res.data.success && Array.isArray(res.data.data)) {
         setRequests(res.data.data);
       }
@@ -62,7 +62,7 @@ const ReturnsPage = () => {
   const handleUpdateStatus = async (requestId, newStatus) => {
     setUpdatingId(requestId);
     try {
-      const res = await authAxios.put(`/order/return-request/${requestId}`, {
+      const res = await ecommerceAxios.put(`/order/return-request/${requestId}`, {
         status: newStatus,
         adminNotes: adminNotes,
       });
@@ -188,8 +188,12 @@ const ReturnsPage = () => {
                       #{request.order?._id ? request.order._id.substring(request.order._id.length - 8) : "Deleted"}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-gray-900">{request.user?.username || "Unknown"}</p>
-                      <p className="text-[10px] text-gray-400">{request.user?.email}</p>
+                      <p className="font-semibold text-gray-900">
+                        {request.order?.address?.fullName || "Guest User"}
+                      </p>
+                      <p className="text-[10px] text-gray-500 font-mono">
+                        ID: {typeof request.user === "object" && request.user !== null ? (request.user._id || request.user.id) : (request.user || "N/A")}
+                      </p>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
@@ -270,6 +274,23 @@ const ReturnsPage = () => {
               </div>
             </div>
 
+            {/* Customer Details */}
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-gray-100 text-xs">
+              <div className="space-y-0.5">
+                <p className="text-[10px] text-gray-400 uppercase font-semibold">Customer Name</p>
+                <p className="font-bold text-gray-900">{selectedRequest.order?.address?.fullName || "Guest User"}</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[10px] text-gray-400 uppercase font-semibold">User ID</p>
+                <p 
+                  className="font-mono text-gray-900 font-bold truncate" 
+                  title={typeof selectedRequest.user === "object" && selectedRequest.user !== null ? (selectedRequest.user._id || selectedRequest.user.id) : (selectedRequest.user || "N/A")}
+                >
+                  {typeof selectedRequest.user === "object" && selectedRequest.user !== null ? (selectedRequest.user._id || selectedRequest.user.id) : (selectedRequest.user || "N/A")}
+                </p>
+              </div>
+            </div>
+
             {/* Customer Reason */}
             <div className="space-y-1.5">
               <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -325,15 +346,16 @@ const ReturnsPage = () => {
               <textarea
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="Enter details regarding authorization, refund transaction IDs, or return instructions..."
-                className="w-full p-3 border border-gray-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[70px]"
+                readOnly={user?.role === "admin"}
+                placeholder={user?.role === "admin" ? "Only sub-admins can edit response notes." : "Enter details regarding authorization, refund transaction IDs, or return instructions..."}
+                className={`w-full p-3 border border-gray-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[70px] ${user?.role === "admin" ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
               />
             </div>
 
             {/* Actions Panel */}
             <div className="pt-3 border-t border-gray-100 flex flex-wrap gap-2 justify-between items-center">
               <div className="flex gap-2">
-                {selectedRequest.status === "Pending" && (
+                {user?.role !== "admin" && selectedRequest.status === "Pending" && (
                   <>
                     <button
                       disabled={updatingId}
@@ -362,7 +384,7 @@ const ReturnsPage = () => {
                   </>
                 )}
 
-                {selectedRequest.status === "Processing" && (
+                {user?.role !== "admin" && selectedRequest.status === "Processing" && (
                   <>
                     <button
                       disabled={updatingId}
@@ -383,7 +405,7 @@ const ReturnsPage = () => {
                   </>
                 )}
 
-                {selectedRequest.status === "Approved" && (
+                {user?.role !== "admin" && selectedRequest.status === "Approved" && (
                   <button
                     disabled={updatingId}
                     onClick={() => handleUpdateStatus(selectedRequest._id, "Completed")}

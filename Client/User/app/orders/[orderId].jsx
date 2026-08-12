@@ -90,6 +90,13 @@ const OrderDetails = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [modalMessageType, setModalMessageType] = useState("error");
 
+  // Return & Refund State
+  const [returnRequestState, setReturnRequestState] = useState(null);
+  const [returnModalVisible, setReturnModalVisible] = useState(false);
+  const [returnType, setReturnType] = useState("Refund"); // "Refund" or "Replace"
+  const [returnReason, setReturnReason] = useState("");
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+
   useEffect(() => {
     if (orderId) {
       fetchOrderDetails();
@@ -102,6 +109,14 @@ const OrderDetails = () => {
       const res = await orderService.getOrderById(orderId);
       if (res && res.success && res.data) {
         setOrder(res.data);
+      }
+      
+      const returnRes = await orderService.getReturnRequests();
+      if (returnRes && returnRes.success && Array.isArray(returnRes.data)) {
+        const orderRequest = returnRes.data.find(
+          (r) => r.order?._id === orderId || r.order === orderId
+        );
+        setReturnRequestState(orderRequest || null);
       }
     } catch (error) {
       console.log("Error loading order details:", error);
@@ -210,9 +225,23 @@ const OrderDetails = () => {
           onPress: async () => {
             try {
               setLoading(true);
-              const res = await orderService.cancelOrder(order._id);
+              let res;
+              if (order.paymentMethod === "Razorpay") {
+                res = await orderService.submitReturnRequest({
+                  orderId: order._id,
+                  requestType: "Refund",
+                  reason: "User cancelled pre-paid order",
+                });
+              } else {
+                res = await orderService.cancelOrder(order._id);
+              }
+
               if (res && res.success) {
-                Alert.alert("Order Cancelled", "Your order has been cancelled successfully.");
+                const title = order.paymentMethod === "Razorpay" ? "Refund Applied" : "Order Cancelled";
+                const msg = order.paymentMethod === "Razorpay"
+                  ? "Your cancellation refund request has been submitted successfully."
+                  : "Your order has been cancelled successfully.";
+                Alert.alert(title, msg);
                 router.replace("/(root)/(tabs)/order");
               } else {
                 Alert.alert("Cancel Error", res?.message || "Could not cancel order.");
@@ -228,6 +257,53 @@ const OrderDetails = () => {
         },
       ]
     );
+  };
+
+  const handleSubmitReturn = async () => {
+    if (!returnReason || !returnReason.trim()) {
+      Alert.alert("Input Error", "Please provide a reason for your return request.");
+      return;
+    }
+
+    try {
+      setSubmittingReturn(true);
+      const res = await orderService.submitReturnRequest({
+        orderId: order._id,
+        requestType: returnType,
+        reason: returnReason.trim(),
+      });
+
+      if (res && res.success) {
+        Alert.alert("Request Submitted", "Your return request has been submitted successfully.");
+        setReturnModalVisible(false);
+        setReturnReason("");
+        fetchOrderDetails();
+      } else {
+        Alert.alert("Submission Error", res?.message || "Could not submit return request.");
+      }
+    } catch (err) {
+      console.log("Submit return request error:", err);
+      const errMsg = err?.response?.data?.message || err.message || "Failed to submit return request.";
+      Alert.alert("Submission Error", errMsg);
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
+  const getReturnStatusBadgeStyle = (status) => {
+    switch (status) {
+      case "Pending":
+        return { backgroundColor: "#FEF3C7", borderColor: "#F59E0B" }; // Amber
+      case "Processing":
+        return { backgroundColor: "#DBEAFE", borderColor: "#3B82F6" }; // Blue
+      case "Approved":
+      case "Completed":
+        return { backgroundColor: "#D1FAE5", borderColor: "#10B981" }; // Green
+      case "Rejected":
+        return { backgroundColor: "#FEE2E2", borderColor: "#EF4444" }; // Red
+      default:
+        return { backgroundColor: "#F1F5F9", borderColor: "#94A3B8" };
+    }
   };
 
   const handleGoBack = () => {
@@ -285,6 +361,33 @@ const OrderDetails = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
+          {/* Return Status Tracker Card */}
+          {returnRequestState && (
+            <View style={styles.returnTrackerCard}>
+              <View style={styles.flexRowBetween}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="swap-horizontal" size={18} color="#4F46E5" />
+                  <Text style={styles.returnTrackerTitle}>
+                    {returnRequestState.requestType} Request
+                  </Text>
+                </View>
+                <View style={[styles.returnBadge, getReturnStatusBadgeStyle(returnRequestState.status)]}>
+                  <Text style={styles.returnBadgeText}>{returnRequestState.status}</Text>
+                </View>
+              </View>
+              <Text style={styles.returnTrackerReason}>
+                <Text style={{ fontWeight: "700", color: "#475569" }}>Reason: </Text>
+                {returnRequestState.reason}
+              </Text>
+              {returnRequestState.adminNotes ? (
+                <Text style={styles.returnTrackerNotes}>
+                  <Text style={{ fontWeight: "700", color: "#475569" }}>Response: </Text>
+                  {returnRequestState.adminNotes}
+                </Text>
+              ) : null}
+            </View>
+          )}
+
           {/* Timeline Card Container */}
           <View style={styles.timelineCard}>
             {ORDER_STAGES.map((stage, idx) => {
@@ -432,20 +535,38 @@ const OrderDetails = () => {
         {/* Bottom Pill Action Button */}
         <View style={styles.bottomBarContainer}>
           {isDelivered ? (
-            <TouchableOpacity
-              style={styles.darkNavyActionBtn}
-              onPress={() => openReviewModal()}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.darkNavyActionBtnText}>Leave a Feedback</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 10, width: "100%" }}>
+              <TouchableOpacity
+                style={[styles.darkNavyActionBtn, { flex: 1 }]}
+                onPress={() => openReviewModal()}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.darkNavyActionBtnText}>Leave Feedback</Text>
+              </TouchableOpacity>
+              
+              {!returnRequestState ? (
+                <TouchableOpacity
+                  style={[styles.darkNavyActionBtn, { flex: 1, backgroundColor: "#4F46E5" }]}
+                  onPress={() => setReturnModalVisible(true)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.darkNavyActionBtnText}>Return / Replace</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={[styles.darkNavyActionBtn, { flex: 1, backgroundColor: "#E2E8F0", borderWidth: 1, borderColor: "#CBD5E1" }]}>
+                  <Text style={[styles.darkNavyActionBtnText, { color: "#64748B" }]}>Return Requested</Text>
+                </View>
+              )}
+            </View>
           ) : canCancel ? (
             <TouchableOpacity
               style={[styles.darkNavyActionBtn, { backgroundColor: "#EF4444" }]}
               onPress={handleCancelOrder}
               activeOpacity={0.85}
             >
-              <Text style={styles.darkNavyActionBtnText}>Cancel Order</Text>
+              <Text style={styles.darkNavyActionBtnText}>
+                {order.paymentMethod === "Razorpay" ? "Apply Refund / Cancel" : "Cancel Order"}
+              </Text>
             </TouchableOpacity>
           ) : isCancelled ? (
             <TouchableOpacity
@@ -593,6 +714,114 @@ const OrderDetails = () => {
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text style={styles.modalSubmitNavyBtnText}>Submit Review</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Return Request Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={returnModalVisible}
+        onRequestClose={() => setReturnModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheetContent}>
+            {/* Modal Header */}
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitleText}>Return / Replace</Text>
+              <TouchableOpacity
+                style={styles.modalCloseCircle}
+                onPress={() => setReturnModalVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="close" size={20} color="#0D172A" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Subtitle */}
+            <Text style={styles.modalSubtitleText}>
+              Select the option for your return request and specify the reason.
+            </Text>
+
+            {/* Request Type Options */}
+            <Text style={styles.inputFieldLabel}>Request Type</Text>
+            <View style={{ flexDirection: "row", gap: 12, marginBottom: 20 }}>
+              <TouchableOpacity
+                style={[
+                  styles.optionSelectCard,
+                  returnType === "Refund" && styles.optionSelectCardSelected,
+                ]}
+                onPress={() => setReturnType("Refund")}
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name="cash-outline"
+                  size={24}
+                  color={returnType === "Refund" ? "#FF5500" : "#64748B"}
+                />
+                <Text
+                  style={[
+                    styles.optionSelectCardText,
+                    returnType === "Refund" && styles.optionSelectCardTextSelected,
+                  ]}
+                >
+                  Refund
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.optionSelectCard,
+                  returnType === "Replace" && styles.optionSelectCardSelected,
+                ]}
+                onPress={() => setReturnType("Replace")}
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name="sync-outline"
+                  size={24}
+                  color={returnType === "Replace" ? "#FF5500" : "#64748B"}
+                />
+                <Text
+                  style={[
+                    styles.optionSelectCardText,
+                    returnType === "Replace" && styles.optionSelectCardTextSelected,
+                  ]}
+                >
+                  Replace
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Reason Section */}
+            <Text style={styles.inputFieldLabel}>Reason for Return</Text>
+            <TextInput
+              placeholder="Please explain why you want to return or replace these items..."
+              placeholderTextColor="#94A3B8"
+              value={returnReason}
+              onChangeText={(txt) => setReturnReason(txt)}
+              multiline
+              numberOfLines={4}
+              style={styles.modalFeedbackInput}
+            />
+
+            {/* Bottom Submit Action Button */}
+            <TouchableOpacity
+              style={[
+                styles.modalSubmitNavyBtn,
+                submittingReturn && { opacity: 0.7 },
+              ]}
+              onPress={handleSubmitReturn}
+              disabled={submittingReturn}
+              activeOpacity={0.85}
+            >
+              {submittingReturn ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.modalSubmitNavyBtnText}>Submit Request</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -798,32 +1027,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
-
-  /* Payment Summary Card */
-  paymentSummaryCard: {
+  rateStarMargin: {
+    marginRight: 4,
+  },
+  summaryCardContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 18,
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   flexRowBetween: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: "600",
     color: "#64748B",
   },
   summaryValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: "#0D172A",
   },
   cardDividerLine: {
     height: 1,
     backgroundColor: "#F1F5F9",
-    marginVertical: 12,
+    marginVertical: 14,
   },
   totalHeaderLabel: {
     fontSize: 16,
@@ -831,70 +1067,70 @@ const styles = StyleSheet.create({
     color: "#0D172A",
   },
   totalHeaderVal: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#FF5500",
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#0D172A",
   },
   invoiceBtn: {
-    backgroundColor: "#EEF2F6",
-    borderColor: "#4F46E5",
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderRadius: 16,
-    paddingVertical: 12,
-    marginTop: 16,
+    marginTop: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: "#EEF2FF",
+    borderWidth: 1.5,
+    borderColor: "#E0E7FF",
   },
   invoiceBtnText: {
-    color: "#4F46E5",
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: "#4F46E5",
   },
-
-  /* Bottom Bar Button matching Image 1 & 2 */
   bottomBarContainer: {
     position: "absolute",
-    bottom: 20,
-    left: 20,
-    right: 20,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === "ios" ? 28 : 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+    flexDirection: "row",
+    alignItems: "center",
   },
   darkNavyActionBtn: {
+    width: "100%",
     backgroundColor: "#0D172A",
     borderRadius: 30,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0D172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
   },
   darkNavyActionBtnText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "800",
   },
-
-  /* Rate & Review Modal matching Image 3 */
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(13, 23, 42, 0.6)",
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
     justifyContent: "flex-end",
   },
   modalSheetContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    padding: 24,
-    paddingBottom: 36,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: Platform.OS === "ios" ? 38 : 24,
   },
   modalHeaderRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   modalTitleText: {
     fontSize: 22,
@@ -996,5 +1232,75 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  returnTrackerCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  returnTrackerTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  returnBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  returnBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  returnTrackerReason: {
+    fontSize: 13,
+    color: "#64748B",
+    marginTop: 10,
+    lineHeight: 18,
+  },
+  returnTrackerNotes: {
+    fontSize: 13,
+    color: "#0F172A",
+    marginTop: 8,
+    backgroundColor: "#F8FAFC",
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    lineHeight: 18,
+  },
+  optionSelectCard: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 2,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  optionSelectCardSelected: {
+    borderColor: "#FF5500",
+    backgroundColor: "#FFF7ED",
+  },
+  optionSelectCardText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  optionSelectCardTextSelected: {
+    color: "#FF5500",
   },
 });
