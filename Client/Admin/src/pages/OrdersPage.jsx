@@ -275,65 +275,132 @@ const OrdersPage = () => {
 
       {/* Order Details Modal */}
       {selectedOrderDetails && (
-        <div className="fixed inset-0 z-50 bg-gray-900/50 flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-200 rounded-xl w-full max-w-lg p-5 shadow-lg space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <h3 className="font-bold text-gray-900 text-base">
-                Order Details #{selectedOrderDetails._id.substring(selectedOrderDetails._id.length - 8)}
-              </h3>
-              <button onClick={() => setSelectedOrderDetails(null)} className="text-gray-400 hover:text-gray-600">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div className="space-y-1">
+                <h3 className="font-bold text-gray-950 text-lg flex items-center gap-2">
+                  <span>Order Details</span>
+                  <span className="font-mono text-xs font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full border border-indigo-100">
+                    #{selectedOrderDetails._id.substring(selectedOrderDetails._id.length - 8)}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-gray-500 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Ordered on {new Date(selectedOrderDetails.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedOrderDetails(null)} 
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Address */}
-            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-xs space-y-1">
-              <p className="font-bold text-gray-900 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-indigo-600" /> Shipping Address
+            {/* Customer & Shipping Details */}
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50/50 p-4 rounded-xl border border-gray-100 text-xs space-y-2 shadow-sm border-l-4 border-l-indigo-600">
+              <p className="font-bold text-gray-900 flex items-center gap-2 text-[13px] border-b border-gray-100 pb-1.5">
+                <MapPin className="w-4 h-4 text-indigo-600" />
+                <span>Shipping & Customer Details</span>
               </p>
-              <p className="font-semibold text-gray-900">{selectedOrderDetails.address?.fullName}</p>
-              <p className="text-gray-600">{selectedOrderDetails.address?.addressLine1}</p>
-              <p className="text-gray-600">
-                {selectedOrderDetails.address?.city}, {selectedOrderDetails.address?.state} - {selectedOrderDetails.address?.postalCode}
-              </p>
-              <p className="text-gray-600 font-mono">Phone: {selectedOrderDetails.address?.phone}</p>
-              <p className="text-gray-600 font-mono">User ID: {selectedOrderDetails.user?._id || selectedOrderDetails.user}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                <div className="space-y-1">
+                  <p className="text-[11px] text-gray-400 uppercase font-semibold">Recipient</p>
+                  <p className="font-bold text-gray-955 text-sm">{selectedOrderDetails.address?.fullName}</p>
+                  <p className="text-gray-600 flex items-center gap-1 mt-1 font-mono">
+                    <Phone className="w-3.5 h-3.5 text-gray-400" />
+                    {selectedOrderDetails.address?.phone}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] text-gray-400 uppercase font-semibold">Delivery Address</p>
+                  <p className="text-gray-700 leading-relaxed font-semibold">
+                    {selectedOrderDetails.address?.addressLine1}
+                  </p>
+                  <p className="text-gray-600">
+                    {selectedOrderDetails.address?.city}, {selectedOrderDetails.address?.state} - {selectedOrderDetails.address?.postalCode}
+                  </p>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400">
+                <span>User ID: <span className="font-mono">{selectedOrderDetails.user?._id || selectedOrderDetails.user}</span></span>
+              </div>
             </div>
 
-            {/* Items */}
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-gray-700 uppercase">Items</p>
-              <div className="divide-y divide-gray-100 bg-gray-50 rounded-lg border border-gray-200 text-xs">
+            {/* Items List */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                <ShoppingBag className="w-4 h-4 text-indigo-600" />
+                <span>Order Items ({selectedOrderDetails.items?.length || 0})</span>
+              </p>
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                 {selectedOrderDetails.items?.map((item, idx) => (
-                  <div key={idx} className="p-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={item.product?.images?.[0] || "https://via.placeholder.com/32"}
-                        alt={item.product?.name}
-                        className="w-8 h-8 rounded object-cover bg-gray-200 border border-gray-300"
-                      />
-                      <div>
-                        <p className="font-semibold text-gray-900">{item.product?.name || "Product"}</p>
-                        <p className="text-[11px] text-gray-500">Qty: {item.quantity}</p>
-                        <p className="text-[10px] text-gray-500 font-mono mt-0.5">Product ID: {item.product?._id || item.product}</p>
+                  <div 
+                    key={idx} 
+                    className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-3 hover:border-indigo-200 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src={item.product?.images?.[0] || "https://via.placeholder.com/64"}
+                          alt={item.product?.name}
+                          className="w-14 h-14 rounded-lg object-cover bg-gray-50 border border-gray-200 shadow-sm"
+                        />
+                        <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-bold text-gray-950 text-xs hover:text-indigo-600 transition-colors line-clamp-1">
+                          {item.product?.name || "Product"}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 font-mono">
+                            ID: {(item.product?._id || item.product).substring(0, 8)}...
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-medium">
+                            ₹{item.price} each
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <p className="font-bold text-gray-900">₹{item.price * item.quantity}</p>
+                    <div className="text-right min-w-[70px]">
+                      <p className="font-bold text-gray-950 text-sm">
+                        ₹{item.price * item.quantity}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {item.quantity} unit{item.quantity > 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Total */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs">
-              <span className="font-semibold text-gray-700">Payment: {selectedOrderDetails.paymentMethod}</span>
-              <span className="font-bold text-gray-900 text-sm">Total: ₹{selectedOrderDetails.totalAmount}</span>
+            {/* Total summary */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-gray-100 space-y-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500 font-medium">Payment Method</span>
+                <span className="font-semibold text-gray-900 bg-white border border-gray-200 px-2.5 py-0.5 rounded-full text-[10px]">
+                  {selectedOrderDetails.paymentMethod}
+                </span>
+              </div>
+              <div className="border-t border-gray-200/60 pt-2.5 flex justify-between items-center">
+                <span className="text-sm font-bold text-gray-900">Total Amount</span>
+                <span className="font-extrabold text-indigo-700 text-lg">
+                  ₹{selectedOrderDetails.totalAmount}
+                </span>
+              </div>
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-gray-200">
+            {/* Action Buttons */}
+            <div className="flex justify-end pt-2 border-t border-gray-100">
               <button
                 onClick={() => setSelectedOrderDetails(null)}
-                className="px-4 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold"
+                className="px-5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-colors shadow-sm"
               >
                 Close
               </button>
