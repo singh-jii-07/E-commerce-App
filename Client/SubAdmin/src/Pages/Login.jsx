@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import authService from "../services/authService";
+import authService from "../server/authService";
 import {
   Store,
   Loader2,
@@ -21,7 +21,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
   
   const { login } = useAuth();
   const navigate = useNavigate();
